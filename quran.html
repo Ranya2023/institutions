@@ -6,229 +6,371 @@
 <title>قورئانی پیرۆز</title>
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#1F4B43">
+<meta name="theme-color" content="#00B884">
 <link rel="stylesheet" href="css/theme.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
 
-  /* ---------- Reader toolbar ---------- */
-  .reader-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  .reader-audio-bar { display: flex; justify-content: center; margin-bottom: 10px; }
-  .audio-play-btn {
-    display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px;
-    border-radius: 999px; border: 1.5px solid var(--gold); background: transparent;
-    color: var(--teal); font-weight: 700; font-size: 14px; min-height: 44px;
+  :root {
+    --brand-teal: #00B884;
+    --brand-teal-dark: #00966C;
+    --gold: #C5A059;
+    --gold-light: #FFFDF2;
+    --bg-main: #F4F6F8;
+    --card-bg: #FFFFFF;
+    --text-primary: #1A202C;
+    --text-muted: #718096;
+    --border-color: #E2E8F0;
   }
-  html[data-theme="dark"] .audio-play-btn { color: var(--gold); }
 
-  /* ---------- Reader card / themes ---------- */
-  body[data-qtheme="classic"] { --q-bg:#FFFDF7; --q-fg:#1C231F; --q-muted:#6B6858; }
-  body[data-qtheme="night"]   { --q-bg:#12181A; --q-fg:#EDE7D3; --q-muted:#9A9682; }
-  body[data-qtheme="sepia"]   { --q-bg:#F1E7D0; --q-fg:#3B2A18; --q-muted:#8A7A5E; }
-  body[data-qtheme="emerald"] { --q-bg:#0F2A22; --q-fg:#F3EEDD; --q-muted:#9FC2B4; }
-  body[data-qtheme="sky"]     { --q-bg:#EAF3F6; --q-fg:#16323D; --q-muted:#5C7A83; }
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    padding-bottom: 90px;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-  #readerCard { background: var(--q-bg, var(--card)); color: var(--q-fg, var(--ink)); transition: background .2s ease, color .2s ease; position: relative; }
+  /* ---------- Topbar Navigation ---------- */
+  .topbar {
+    background: var(--brand-teal);
+    color: #ffffff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+  .topbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .topbar .controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .topbar .icon-btn {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.2s;
+  }
+  .topbar .icon-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .lang-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.12);
+    padding: 2px;
+    border-radius: 20px;
+  }
+  .lang-pill {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .lang-pill.active {
+    background: #ffffff;
+    color: var(--brand-teal);
+    font-weight: 700;
+    opacity: 1;
+  }
 
-  .quran-flow-text { font-family: 'Amiri Quran', 'Amiri', serif; text-align: justify; text-align-last: center; line-height: 2.7; font-size: var(--q-font-size, 26px); }
+  /* ---------- Page Layout & Reader Card ---------- */
+  .page.wide {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 12px 12px 0 12px;
+  }
+
+  /* Reader themes */
+  body[data-qtheme="classic"] { --q-bg: #FFFFFF; --q-fg: #1C231F; --q-muted: #6B6858; }
+  body[data-qtheme="night"]   { --q-bg: #12181A; --q-fg: #EDE7D3; --q-muted: #9A9682; }
+  body[data-qtheme="sepia"]   { --q-bg: #F8F1E1; --q-fg: #3B2A18; --q-muted: #8A7A5E; }
+  body[data-qtheme="emerald"] { --q-bg: #0F2A22; --q-fg: #F3EEDD; --q-muted: #9FC2B4; }
+  body[data-qtheme="sky"]     { --q-bg: #EAF3F6; --q-fg: #16323D; --q-muted: #5C7A83; }
+
+  #readerCard {
+    background: var(--q-bg, #FFFFFF);
+    color: var(--q-fg, var(--text-primary));
+    border-radius: 20px;
+    padding: 24px 20px 32px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    position: relative;
+    min-height: 480px;
+  }
+
+  /* ---------- Surah Header Banner (Matching Image 1 Ornate Frame) ---------- */
+  .surah-divider {
+    text-align: center;
+    margin: 20px 0 24px 0;
+    padding: 4px;
+  }
+  .surah-frame {
+    display: inline-block;
+    position: relative;
+    padding: 12px 48px;
+    background: var(--gold-light);
+    border: 2px double var(--gold);
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 2px var(--gold-light), inset 0 0 0 3px var(--gold);
+  }
+  .surah-divider-name {
+    font-family: 'Amiri Quran', 'Amiri', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2C3E50;
+    line-height: 1.2;
+  }
+  .surah-divider-meta {
+    font-size: 12px;
+    color: #8C7B51;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* ---------- Quran Flow Text & Ayah Markers ---------- */
+  .quran-flow-text {
+    font-family: 'Amiri Quran', 'Amiri', serif;
+    text-align: justify;
+    text-justify: inter-word;
+    text-align-last: center;
+    line-height: 2.8;
+    font-size: var(--q-font-size, 26px);
+    direction: rtl;
+    margin: 0;
+  }
+
   .ayah-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 1.05em; height: 1.05em; border-radius: 50%; border: 1.5px solid currentColor;
-    font-size: 0.46em; font-family: 'Amiri Quran', 'Amiri', serif; font-weight: 700; opacity: .6;
-    margin: 0 3px; vertical-align: 0.1em; line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--gold);
+    background: rgba(197, 160, 89, 0.1);
+    font-size: 12px;
+    font-family: 'Amiri Quran', 'Amiri', serif;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 6px;
+    vertical-align: middle;
+    line-height: 1;
   }
-  .ayah-unit.bookmarked .ayah-num { border-color: var(--gold); background: var(--gold); color: #fff; opacity: 1; }
-  .ayah-unit.playing { background: rgba(176,141,62,.18); border-radius: 6px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  .ayah-unit.jump-target { animation: ayahFlash 1.6s ease; }
-  @keyframes ayahFlash { 0%,100% { background: transparent; } 30% { background: rgba(176,141,62,.35); } }
 
-  .surah-divider { text-align: center; margin: 26px 0 16px; padding: 12px 8px; border-top: 1px solid var(--q-muted, var(--line)); border-bottom: 1px solid var(--q-muted, var(--line)); }
-  .surah-divider-name { font-family: 'Amiri Quran', 'Amiri', serif; font-size: 22px; font-weight: 700; }
-  .surah-divider-meta { font-size: 12px; opacity: .75; margin-top: 4px; }
-  .surah-divider:first-child { margin-top: 0; }
+  .ayah-unit.playing {
+    background: rgba(0, 184, 132, 0.15);
+    border-radius: 6px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .ayah-unit.jump-target {
+    animation: ayahFlash 1.6s ease;
+  }
+  @keyframes ayahFlash {
+    0%, 100% { background: transparent; }
+    30% { background: rgba(197, 160, 89, 0.35); }
+  }
 
-  .ayah-block { padding: 16px 2px; border-bottom: 1px dashed var(--q-muted, var(--line)); }
+  /* Block Tafsir View */
+  .ayah-block { padding: 16px 2px; border-bottom: 1px dashed var(--border-color); }
   .ayah-block:last-child { border-bottom: none; }
   .ayah-block-arabic { font-family: 'Amiri Quran', 'Amiri', serif; font-size: var(--q-font-size, 26px); text-align: right; line-height: 2.4; margin-bottom: 8px; }
-  .ayah-block-tafsir { font-size: 14px; line-height: 1.9; color: var(--q-muted, var(--muted)); }
+  .ayah-block-tafsir { font-size: 14px; line-height: 1.9; color: var(--q-muted, var(--text-muted)); }
   .ayah-block-actions { margin-top: 8px; display: flex; gap: 6px; justify-content: flex-end; }
-  .ayah-mini-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid currentColor; opacity: .55; background: transparent; font-size: 13px; color: inherit; }
-  .ayah-block.playing { background: rgba(176,141,62,.12); border-radius: var(--radius-sm); }
-  .ayah-block.jump-target { animation: ayahFlash 1.6s ease; border-radius: var(--radius-sm); }
+  .ayah-mini-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid currentColor; opacity: 0.65; background: transparent; font-size: 13px; color: inherit; cursor: pointer; }
 
-  /* ---------- Page navigation ---------- */
-  .page-nav { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
-  .page-nav button { flex: 1; }
-  .page-nav .page-indicator-btn { flex: 1.6; font-weight: 700; }
-  .page-nav .icon-btn { flex: .7; min-height: 44px; }
+  /* ---------- Floating Bottom Control Bar (Image 1 Style) ---------- */
+  .bottom-control-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 520px;
+    background: #FFFFFF;
+    border-radius: 40px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    z-index: 200;
+    border: 1px solid var(--border-color);
+  }
+  body[data-qtheme="night"] .bottom-control-bar {
+    background: #1C2427;
+    border-color: #2D3748;
+    color: #EDE7D3;
+  }
+  .bottom-play-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--brand-teal);
+    color: #FFFFFF;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 184, 132, 0.35);
+    transition: transform 0.15s;
+  }
+  .bottom-play-btn:active { transform: scale(0.92); }
+  .bottom-info-pill {
+    background: var(--bg-main);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+  }
+  body[data-qtheme="night"] .bottom-info-pill {
+    background: #253135;
+    color: #EDE7D3;
+    border-color: #3B4A50;
+  }
+  .bottom-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bottom-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .bottom-nav-btn:active { background: rgba(0, 0, 0, 0.05); }
 
-  /* ---------- Settings / bookmarks modal bits ---------- */
+  /* Tap Hints */
+  .reader-tap-hint { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); opacity: 0.75; margin-top: 8px; padding: 0 8px; }
+
+  /* Settings / Modal Bits */
   .theme-swatch-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 10px 0 6px; }
-  .theme-swatch { height: 50px; border-radius: 10px; border: 2px solid var(--line); cursor: pointer; }
-  .theme-swatch.selected { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(176,141,62,.25); }
-  .theme-swatch-label { font-size: 10px; text-align: center; margin-top: 4px; color: var(--muted); }
-  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line); gap: 10px; }
-  .settings-row:first-of-type { border-top: none; }
-  .settings-row.column { flex-direction: column; align-items: stretch; }
+  .theme-swatch { height: 46px; border-radius: 10px; border: 2px solid var(--border-color); cursor: pointer; }
+  .theme-swatch.selected { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.3); }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--border-color); gap: 10px; }
   .toggle-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-switch .track { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: background .15s ease; }
-  .toggle-switch .thumb { position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: inset-inline-start .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
-  .toggle-switch input:checked ~ .track { background: var(--teal); }
+  .toggle-switch .track { position: absolute; inset: 0; background: #CBD5E0; border-radius: 999px; transition: background 0.15s; }
+  .toggle-switch .thumb { position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: inset-inline-start 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .toggle-switch input:checked ~ .track { background: var(--brand-teal); }
   .toggle-switch input:checked ~ .thumb { inset-inline-start: 23px; }
   .font-size-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
   .font-size-row input[type="range"] { flex: 1; }
-  .attribution-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 16px; line-height: 1.7; }
 
-  /* ---------- Bookmarks ---------- */
-  .bookmark-row-item { display: flex; align-items: center; gap: 8px; padding: 12px 4px; border-top: 1px solid var(--line); }
+  /* Bookmarks List Modal */
+  .bookmark-row-item { display: flex; align-items: center; gap: 8px; padding: 12px 4px; border-top: 1px solid var(--border-color); }
   .bookmark-row-item:first-child { border-top: none; }
   .bookmark-row-item .info { flex: 1; min-width: 0; cursor: pointer; }
-  .bookmark-row-item .name { font-weight: 700; font-size: 14px; overflow-wrap: break-word; }
-  .bookmark-row-item .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .bookmark-row-item .name { font-weight: 700; font-size: 14px; }
+  .bookmark-row-item .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  /* ---------- Dua Khatm ---------- */
-  .dua-khatm-text { text-align: center; font-family: 'Amiri Quran', 'Amiri', serif; font-size: 21px; line-height: 2.4; white-space: pre-line; padding: 6px 4px; }
+  /* Dua Khatm Text */
+  .dua-khatm-text { text-align: center; font-family: 'Amiri Quran', 'Amiri', serif; font-size: 20px; line-height: 2.4; white-space: pre-line; padding: 6px 4px; }
 
-  /* ---------- Reader page tap zones ---------- */
-  .reader-tap-hint { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); opacity: .55; margin-top: 4px; padding: 0 6px; }
-
-  /* ---------- Immersive / fullscreen reading ----------
-     Implemented as a plain fixed-position overlay rather than the
-     browser's native Fullscreen API — that API behaves inconsistently
-     across mobile browsers (partial support on iOS Safari, viewport
-     resize glitches on Android Chrome when the address bar hides),
-     which was causing the blank/overlapping rendering. A CSS-only
-     overlay is fully within our control on every device. */
-  body.q-immersive { overflow: hidden; }
-
+  /* Fullscreen overlay mode */
+  body.q-immersive { overflow: hidden; padding-bottom: 0; }
   body.q-immersive .topbar,
-  body.q-immersive #readerHeader,
-  body.q-immersive .reader-audio-bar,
-  body.q-immersive .reader-tap-hint,
-  body.q-immersive .page-nav,
-  body.q-immersive .ayah-block-actions { display: none !important; }
-
+  body.q-immersive .bottom-control-bar,
+  body.q-immersive .reader-tap-hint { display: none !important; }
   body.q-immersive .page.wide { padding: 0; margin: 0; max-width: none; width: 100%; }
-
   body.q-immersive #readerCard {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    background: var(--q-bg, var(--card));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 0;
-    box-shadow: none;
-    margin: 0;
+    position: fixed; inset: 0; z-index: 500; border-radius: 0; border: none;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
     padding: max(22px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   }
-  /* Vertically centers short pages instead of leaving them stranded
-     near the top with empty space below. On pages with more text than
-     fits, the auto margins collapse to 0 and it behaves like normal
-     top-aligned, scrollable content — no clipping either way. */
   body.q-immersive #quranFlow { margin: auto 0; width: 100%; }
-
-  .immersive-page-badge {
-    display: none;
-    position: fixed;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    inset-inline: 0;
-    margin: 0 auto;
-    width: fit-content;
-    z-index: 501;
-    background: var(--card);
-    color: var(--ink);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 7px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    box-shadow: var(--shadow);
-    opacity: .92;
-  }
+  .immersive-page-badge { display: none; position: fixed; bottom: 20px; inset-inline: 0; margin: 0 auto; width: fit-content; z-index: 501; background: #fff; color: #1A202C; border: 1px solid var(--border-color); border-radius: 999px; padding: 6px 18px; font-size: 12px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
   body.q-immersive .immersive-page-badge { display: block; }
-
-  .immersive-exit-btn {
-    display: none;
-    position: fixed;
-    top: max(14px, env(safe-area-inset-top));
-    inset-inline-end: max(14px, env(safe-area-inset-right));
-    z-index: 501;
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--card);
-    color: var(--ink);
-    font-size: 15px;
-    align-items: center; justify-content: center;
-    box-shadow: var(--shadow);
-    opacity: .85;
-  }
+  .immersive-exit-btn { display: none; position: fixed; top: 16px; inset-inline-end: 16px; z-index: 501; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-color); background: #fff; color: #1A202C; font-size: 15px; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
   body.q-immersive .immersive-exit-btn { display: flex; }
 </style>
 </head>
-<body>
+<body data-qtheme="classic">
 
+<!-- Topbar Header -->
 <div class="topbar">
   <div class="brand">
     <button class="icon-btn" onclick="handleBack()">←</button>
-    <span data-i18n="quran_page_heading">قورئانی پیرۆز</span>
+    <span id="topbarSurahTitle" data-i18n="quran_page_heading">قورئانی پیرۆز</span>
   </div>
   <div class="controls">
+    <span class="bottom-info-pill" id="topbarJuzBadge" style="background:rgba(255,255,255,0.2); color:#fff; border:none; padding:4px 10px; font-size:12px;">جزء ١</span>
     <button class="icon-btn" onclick="openDuaKhatmModal()" title="Dua Khatm">🤲</button>
     <button class="icon-btn" onclick="openBookmarksModal()" title="Bookmarks">🔖</button>
     <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
     <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
-    <div class="lang-toggle">
-      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); refreshCurrentView();">کوردی</button>
-      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); refreshCurrentView();">العربية</button>
-    </div>
-    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
-      <span class="theme-toggle-icon">☾</span>
-    </button>
   </div>
 </div>
 
 <div class="page wide" id="quranPage">
-  <!-- Reader — always Mushaf page-by-page (1–604) -->
-  <div id="readerView">
-    <div class="hero-card" id="readerHeader" style="text-align:center; margin-top:0; padding:18px 20px">
-      <h1 id="readerTitle" style="font-size:22px; font-family:'Amiri Quran','Amiri',serif"></h1>
-      <p class="sub" id="readerSubtitle" style="margin-top:4px"></p>
+  <!-- Reader Card -->
+  <div id="readerCard">
+    <div id="quranFlow">
+      <p class="sub" style="text-align:center; padding: 40px 0;" data-i18n="prayer_loading">چاوەڕوان بە...</p>
     </div>
+  </div>
 
-    <div class="reader-audio-bar">
-      <button class="audio-play-btn" id="playBtn" onclick="toggleAudio()">
-        <span id="playIcon">▶</span> <span id="playLabel" data-i18n="quran_play_audio">گوێگرتن</span>
-      </button>
-    </div>
+  <div class="immersive-page-badge" id="immersivePageBadge"></div>
+  <button class="immersive-exit-btn" onclick="exitImmersive()" title="Exit fullscreen">✕</button>
 
-    <div class="hero-card" id="readerCard">
-      <div id="quranFlow">
-        <p class="sub" data-i18n="prayer_loading">چاوەڕوان بە...</p>
-      </div>
-    </div>
+  <div class="reader-tap-hint">
+    <span data-i18n="quran_tap_hint_next">👈 کرتە/سوایپ بۆ لاپەڕەی داهاتوو</span>
+    <span data-i18n="quran_tap_hint_prev">لاپەڕەی پێشوو سوایپ/کرتە 👉</span>
+  </div>
+</div>
 
-    <div class="immersive-page-badge" id="immersivePageBadge"></div>
-    <button class="immersive-exit-btn" onclick="exitImmersive()" title="Exit fullscreen">✕</button>
+<!-- Floating Bottom Control Bar (Matching Image 1) -->
+<div class="bottom-control-bar">
+  <button class="bottom-play-btn" id="playBtn" onclick="toggleAudio()" title="Play audio">
+    <span id="playIcon">▶</span>
+  </button>
 
-    <div class="reader-tap-hint">
-      <span data-i18n="quran_tap_hint_next">👈 کرتە/سوایپ بۆ لاپەڕەی داهاتوو</span>
-      <span data-i18n="quran_tap_hint_prev">لاپەڕەی پێشوو سوایپ/کرتە 👉</span>
-    </div>
-    <div class="reader-tap-hint" style="justify-content: center; margin-top: 6px;">
-      <span data-i18n="quran_fullscreen_hint">(بۆ خوێندنەوەی پڕشاشە، کرتە لە ناوەڕاستی لاپەڕە بکە)</span>
-    </div>
+  <button class="bottom-info-pill" id="pageIndicatorBtn" onclick="openGotoPageModal()">
+    لاپەڕە ١ / ٦٠٤
+  </button>
 
-    <div class="page-nav" id="pageNav">
-      <button class="btn-outline" onclick="prevPage()" data-i18n="quran_prev_page">پێشوو</button>
-      <button class="icon-btn" id="pageNavPlayBtn" onclick="toggleAudio()" title="Play">▶</button>
-      <button class="btn-outline page-indicator-btn" id="pageIndicatorBtn" onclick="openGotoPageModal()"></button>
-      <button class="btn-outline" onclick="nextPage()" data-i18n="quran_next_page">داهاتوو</button>
-    </div>
+  <div class="bottom-nav-actions">
+    <button class="bottom-nav-btn" onclick="prevPage()" title="Previous Page">▶</button>
+    <button class="bottom-nav-btn" onclick="nextPage()" title="Next Page">◀</button>
   </div>
 </div>
 
@@ -237,9 +379,8 @@
 <script src="js/ui-helpers.js"></script>
 <script>
 // ============================================================
-// Quran reader — Al Quran Cloud API
-// Reader is always Mushaf page-by-page (1–604), plain Uthmani script
-// (no Tajweed colour-coding — kept simple and fast-loading).
+// Quran Reader — Al Quran Cloud API
+// Mushaf page-by-page (1–604)
 // ============================================================
 const QURAN_API = 'https://api.alquran.cloud/v1';
 const TEXT_EDITION = 'quran-uthmani';
@@ -247,7 +388,7 @@ const TAFSIR_EDITION = 'ku.asan';
 const AUDIO_EDITION = 'ar.alafasy';
 const TOTAL_PAGES = 604;
 
-// ---- Static Quran metadata ----
+// ---- Static Quran Metadata ----
 const PAGE_STARTS=[[1,1],[2,1],[2,6],[2,17],[2,25],[2,30],[2,38],[2,49],[2,58],[2,62],[2,70],[2,77],[2,84],[2,89],[2,94],[2,102],[2,106],[2,113],[2,120],[2,127],[2,135],[2,142],[2,146],[2,154],[2,164],[2,170],[2,177],[2,182],[2,187],[2,191],[2,197],[2,203],[2,211],[2,216],[2,220],[2,225],[2,231],[2,234],[2,238],[2,246],[2,249],[2,253],[2,257],[2,260],[2,265],[2,270],[2,275],[2,282],[2,283],[3,1],[3,10],[3,16],[3,23],[3,30],[3,38],[3,46],[3,53],[3,62],[3,71],[3,78],[3,84],[3,92],[3,101],[3,109],[3,116],[3,122],[3,133],[3,141],[3,149],[3,154],[3,158],[3,166],[3,174],[3,181],[3,187],[3,195],[4,1],[4,7],[4,12],[4,15],[4,20],[4,24],[4,27],[4,34],[4,38],[4,45],[4,52],[4,60],[4,66],[4,75],[4,80],[4,87],[4,92],[4,95],[4,102],[4,106],[4,114],[4,122],[4,128],[4,135],[4,141],[4,148],[4,155],[4,163],[4,171],[4,176],[5,3],[5,6],[5,10],[5,14],[5,18],[5,24],[5,32],[5,37],[5,42],[5,46],[5,51],[5,58],[5,65],[5,71],[5,77],[5,83],[5,90],[5,96],[5,104],[5,109],[5,114],[6,1],[6,9],[6,19],[6,28],[6,36],[6,45],[6,53],[6,60],[6,69],[6,74],[6,82],[6,91],[6,95],[6,102],[6,111],[6,119],[6,125],[6,132],[6,138],[6,143],[6,147],[6,152],[6,158],[7,1],[7,12],[7,23],[7,31],[7,38],[7,44],[7,52],[7,58],[7,68],[7,74],[7,82],[7,88],[7,96],[7,105],[7,121],[7,131],[7,138],[7,144],[7,150],[7,156],[7,160],[7,164],[7,171],[7,179],[7,188],[7,196],[8,1],[8,9],[8,17],[8,26],[8,34],[8,41],[8,46],[8,53],[8,62],[8,70],[9,1],[9,7],[9,14],[9,21],[9,27],[9,32],[9,37],[9,41],[9,48],[9,55],[9,62],[9,69],[9,73],[9,80],[9,87],[9,94],[9,100],[9,107],[9,112],[9,118],[9,123],[10,1],[10,7],[10,15],[10,21],[10,26],[10,34],[10,43],[10,54],[10,62],[10,71],[10,79],[10,89],[10,98],[10,107],[11,6],[11,13],[11,20],[11,29],[11,38],[11,46],[11,54],[11,63],[11,72],[11,82],[11,89],[11,98],[11,109],[11,118],[12,5],[12,15],[12,23],[12,31],[12,38],[12,44],[12,53],[12,64],[12,70],[12,79],[12,87],[12,96],[12,104],[13,1],[13,6],[13,14],[13,19],[13,29],[13,35],[13,43],[14,6],[14,11],[14,19],[14,25],[14,34],[14,43],[15,1],[15,16],[15,32],[15,52],[15,71],[15,91],[16,7],[16,15],[16,27],[16,35],[16,43],[16,55],[16,65],[16,73],[16,80],[16,88],[16,94],[16,103],[16,111],[16,119],[17,1],[17,8],[17,18],[17,28],[17,39],[17,50],[17,59],[17,67],[17,76],[17,87],[17,97],[17,105],[18,5],[18,16],[18,21],[18,28],[18,35],[18,46],[18,54],[18,62],[18,75],[18,84],[18,98],[19,1],[19,12],[19,26],[19,39],[19,52],[19,65],[19,77],[19,96],[20,13],[20,38],[20,52],[20,65],[20,77],[20,88],[20,99],[20,114],[20,126],[21,1],[21,11],[21,25],[21,36],[21,45],[21,58],[21,73],[21,82],[21,91],[21,102],[22,1],[22,6],[22,16],[22,24],[22,31],[22,39],[22,47],[22,56],[22,65],[22,73],[23,1],[23,18],[23,28],[23,43],[23,60],[23,75],[23,90],[23,105],[24,1],[24,11],[24,21],[24,28],[24,32],[24,37],[24,44],[24,54],[24,59],[24,62],[25,3],[25,12],[25,21],[25,33],[25,44],[25,56],[25,68],[26,1],[26,20],[26,40],[26,61],[26,84],[26,112],[26,137],[26,160],[26,184],[26,207],[27,1],[27,14],[27,23],[27,36],[27,45],[27,56],[27,64],[27,77],[27,89],[28,6],[28,14],[28,22],[28,29],[28,36],[28,44],[28,51],[28,60],[28,71],[28,78],[28,85],[29,7],[29,15],[29,24],[29,31],[29,39],[29,46],[29,53],[29,64],[30,6],[30,16],[30,25],[30,33],[30,42],[30,51],[31,1],[31,12],[31,20],[31,29],[32,1],[32,12],[32,21],[33,1],[33,7],[33,16],[33,23],[33,31],[33,36],[33,44],[33,51],[33,55],[33,63],[34,1],[34,8],[34,15],[34,23],[34,32],[34,40],[34,49],[35,4],[35,12],[35,19],[35,31],[35,39],[35,45],[36,13],[36,28],[36,41],[36,55],[36,71],[37,1],[37,25],[37,52],[37,77],[37,103],[37,127],[37,154],[38,1],[38,17],[38,27],[38,43],[38,62],[38,84],[39,6],[39,11],[39,22],[39,32],[39,41],[39,48],[39,57],[39,68],[39,75],[40,8],[40,17],[40,26],[40,34],[40,41],[40,50],[40,59],[40,67],[40,78],[41,1],[41,12],[41,21],[41,30],[41,39],[41,47],[42,1],[42,11],[42,16],[42,23],[42,32],[42,45],[42,52],[43,11],[43,23],[43,34],[43,48],[43,61],[43,74],[44,1],[44,19],[44,40],[45,1],[45,14],[45,23],[45,33],[46,6],[46,15],[46,21],[46,29],[47,1],[47,12],[47,20],[47,30],[48,1],[48,10],[48,16],[48,24],[48,29],[49,5],[49,12],[50,1],[50,16],[50,36],[51,7],[51,31],[51,52],[52,15],[52,32],[53,1],[53,27],[53,45],[54,7],[54,28],[54,50],[55,17],[55,41],[55,68],[56,17],[56,51],[56,77],[57,4],[57,12],[57,19],[57,25],[58,1],[58,7],[58,12],[58,22],[59,4],[59,10],[59,17],[60,1],[60,6],[60,12],[61,6],[62,1],[62,9],[63,5],[64,1],[64,10],[65,1],[65,6],[66,1],[66,8],[67,1],[67,13],[67,27],[68,16],[68,43],[69,9],[69,35],[70,11],[70,40],[71,11],[72,1],[72,14],[73,1],[73,20],[74,18],[74,48],[75,20],[76,6],[76,26],[77,20],[78,1],[78,31],[79,16],[80,1],[81,1],[82,1],[83,7],[83,35],[85,1],[86,1],[87,16],[89,1],[89,24],[91,1],[92,15],[95,1],[97,1],[98,8],[100,10],[103,1],[106,1],[109,1],[112,1]];
 const JUZ_STARTS=[[1,1],[2,142],[2,253],[3,93],[4,24],[4,148],[5,82],[6,111],[7,88],[8,41],[9,93],[11,6],[12,53],[15,1],[17,1],[18,75],[21,1],[23,1],[25,21],[27,56],[29,46],[33,31],[36,28],[39,32],[41,47],[46,1],[51,31],[58,1],[67,1],[78,1]];
 const SURAH_META=[["سُورَةُ ٱلْفَاتِحَةِ","Al-Faatiha","The Opening",7,"M"],["سُورَةُ البَقَرَةِ","Al-Baqara","The Cow",286,"D"],["سُورَةُ آلِ عِمۡرَانَ","Aal-i-Imraan","The Family of Imraan",200,"D"],["سُورَةُ النِّسَاءِ","An-Nisaa","The Women",176,"D"],["سُورَةُ المَائـِدَةِ","Al-Maaida","The Table",120,"D"],["سُورَةُ الأَنۡعَامِ","Al-An'aam","The Cattle",165,"M"],["سُورَةُ الأَعۡرَافِ","Al-A'raaf","The Heights",206,"M"],["سُورَةُ الأَنفَالِ","Al-Anfaal","The Spoils of War",75,"D"],["سُورَةُ التَّوۡبَةِ","At-Tawba","The Repentance",129,"D"],["سُورَةُ يُونُسَ","Yunus","Jonas",109,"M"],["سُورَةُ هُودٍ","Hud","Hud",123,"M"],["سُورَةُ يُوسُفَ","Yusuf","Joseph",111,"M"],["سُورَةُ الرَّعۡدِ","Ar-Ra'd","The Thunder",43,"D"],["سُورَةُ إِبۡرَاهِيمَ","Ibrahim","Abraham",52,"M"],["سُورَةُ الحِجۡرِ","Al-Hijr","The Rock",99,"M"],["سُورَةُ النَّحۡلِ","An-Nahl","The Bee",128,"M"],["سُورَةُ الإِسۡرَاءِ","Al-Israa","The Night Journey",111,"M"],["سُورَةُ الكَهۡفِ","Al-Kahf","The Cave",110,"M"],["سُورَةُ مَرۡيَمَ","Maryam","Mary",98,"M"],["سُورَةُ طه","Taa-Haa","Taa-Haa",135,"M"],["سُورَةُ الأَنبِيَاءِ","Al-Anbiyaa","The Prophets",112,"M"],["سُورَةُ الحَجِّ","Al-Hajj","The Pilgrimage",78,"D"],["سُورَةُ المُؤۡمِنُونَ","Al-Muminoon","The Believers",118,"M"],["سُورَةُ النُّورِ","An-Noor","The Light",64,"D"],["سُورَةُ الفُرۡقَانِ","Al-Furqaan","The Criterion",77,"M"],["سُورَةُ الشُّعَرَاءِ","Ash-Shu'araa","The Poets",227,"M"],["سُورَةُ النَّمۡلِ","An-Naml","The Ant",93,"M"],["سُورَةُ القَصَصِ","Al-Qasas","The Stories",88,"M"],["سُورَةُ العَنكَبُوتِ","Al-Ankaboot","The Spider",69,"M"],["سُورَةُ الرُّومِ","Ar-Room","The Romans",60,"M"],["سُورَةُ لُقۡمَانَ","Luqman","Luqman",34,"M"],["سُورَةُ السَّجۡدَةِ","As-Sajda","The Prostration",30,"M"],["سُورَةُ الأَحۡزَابِ","Al-Ahzaab","The Clans",73,"D"],["سُورَةُ سَبَإٍ","Saba","Sheba",54,"M"],["سُورَةُ فَاطِرٍ","Faatir","The Originator",45,"M"],["سُورَةُ يسٓ","Yaseen","Yaseen",83,"M"],["سُورَةُ الصَّافَّاتِ","As-Saaffaat","Those drawn up in Ranks",182,"M"],["سُورَةُ صٓ","Saad","The letter Saad",88,"M"],["سُورَةُ الزُّمَرِ","Az-Zumar","The Groups",75,"M"],["سُورَةُ غَافِرٍ","Ghafir","The Forgiver",85,"M"],["سُورَةُ فُصِّلَتۡ","Fussilat","Explained in detail",54,"M"],["سُورَةُ الشُّورَىٰ","Ash-Shura","Consultation",53,"M"],["سُورَةُ الزُّخۡرُفِ","Az-Zukhruf","Ornaments of gold",89,"M"],["سُورَةُ الدُّخَانِ","Ad-Dukhaan","The Smoke",59,"M"],["سُورَةُ الجَاثِيَةِ","Al-Jaathiya","Crouching",37,"M"],["سُورَةُ الأَحۡقَافِ","Al-Ahqaf","The Dunes",35,"M"],["سُورَةُ مُحَمَّدٍ","Muhammad","Muhammad",38,"D"],["سُورَةُ الفَتۡحِ","Al-Fath","The Victory",29,"D"],["سُورَةُ الحُجُرَاتِ","Al-Hujuraat","The Inner Apartments",18,"D"],["سُورَةُ قٓ","Qaaf","The letter Qaaf",45,"M"],["سُورَةُ الذَّارِيَاتِ","Adh-Dhaariyat","The Winnowing Winds",60,"M"],["سُورَةُ الطُّورِ","At-Tur","The Mount",49,"M"],["سُورَةُ النَّجۡمِ","An-Najm","The Star",62,"M"],["سُورَةُ القَمَرِ","Al-Qamar","The Moon",55,"M"],["سُورَةُ الرَّحۡمَٰن","Ar-Rahmaan","The Beneficent",78,"D"],["سُورَةُ الوَاقِعَةِ","Al-Waaqia","The Inevitable",96,"M"],["سُورَةُ الحَدِيدِ","Al-Hadid","The Iron",29,"D"],["سُورَةُ المُجَادلَةِ","Al-Mujaadila","The Pleading Woman",22,"D"],["سُورَةُ الحَشۡرِ","Al-Hashr","The Exile",24,"D"],["سُورَةُ المُمۡتَحنَةِ","Al-Mumtahana","She that is to be examined",13,"D"],["سُورَةُ الصَّفِّ","As-Saff","The Ranks",14,"D"],["سُورَةُ الجُمُعَةِ","Al-Jumu'a","Friday",11,"D"],["سُورَةُ المُنَافِقُونَ","Al-Munaafiqoon","The Hypocrites",11,"D"],["سُورَةُ التَّغَابُنِ","At-Taghaabun","Mutual Disillusion",18,"D"],["سُورَةُ الطَّلَاقِ","At-Talaaq","Divorce",12,"D"],["سُورَةُ التَّحۡرِيمِ","At-Tahrim","The Prohibition",12,"D"],["سُورَةُ المُلۡكِ","Al-Mulk","The Sovereignty",30,"M"],["سُورَةُ القَلَمِ","Al-Qalam","The Pen",52,"M"],["سُورَةُ الحَاقَّةِ","Al-Haaqqa","The Reality",52,"M"],["سُورَةُ المَعَارِجِ","Al-Ma'aarij","The Ascending Stairways",44,"M"],["سُورَةُ نُوحٍ","Nooh","Noah",28,"M"],["سُورَةُ الجِنِّ","Al-Jinn","The Jinn",28,"M"],["سُورَةُ المُزَّمِّلِ","Al-Muzzammil","The Enshrouded One",20,"M"],["سُورَةُ المُدَّثِّرِ","Al-Muddaththir","The Cloaked One",56,"M"],["سُورَةُ القِيَامَةِ","Al-Qiyaama","The Resurrection",40,"M"],["سُورَةُ الإِنسَانِ","Al-Insaan","Man",31,"D"],["سُورَةُ المُرۡسَلَاتِ","Al-Mursalaat","The Emissaries",50,"M"],["سُورَةُ النَّبَإِ","An-Naba","The Announcement",40,"M"],["سُورَةُ النَّازِعَاتِ","An-Naazi'aat","Those who drag forth",46,"M"],["سُورَةُ عَبَسَ","Abasa","He frowned",42,"M"],["سُورَةُ التَّكۡوِيرِ","At-Takwir","The Overthrowing",29,"M"],["سُورَةُ الانفِطَارِ","Al-Infitaar","The Cleaving",19,"M"],["سُورَةُ المُطَفِّفِينَ","Al-Mutaffifin","Defrauding",36,"M"],["سُورَةُ الانشِقَاقِ","Al-Inshiqaaq","The Splitting Open",25,"M"],["سُورَةُ البُرُوجِ","Al-Burooj","The Constellations",22,"M"],["سُورَةُ الطَّارِقِ","At-Taariq","The Morning Star",17,"M"],["سُورَةُ الأَعۡلَىٰ","Al-A'laa","The Most High",19,"M"],["سُورَةُ الغَاشِيَةِ","Al-Ghaashiya","The Overwhelming",26,"M"],["سُورَةُ الفَجۡرِ","Al-Fajr","The Dawn",30,"M"],["سُورَةُ البَلَدِ","Al-Balad","The City",20,"M"],["سُورَةُ الشَّمۡسِ","Ash-Shams","The Sun",15,"M"],["سُورَةُ اللَّيۡلِ","Al-Lail","The Night",21,"M"],["سُورَةُ الضُّحَىٰ","Ad-Dhuhaa","The Morning Hours",11,"M"],["سُورَةُ الشَّرۡحِ","Ash-Sharh","The Consolation",8,"M"],["سُورَةُ التِّينِ","At-Tin","The Fig",8,"M"],["سُورَةُ العَلَقِ","Al-Alaq","The Clot",19,"M"],["سُورَةُ القَدۡرِ","Al-Qadr","The Power, Fate",5,"M"],["سُورَةُ البَيِّنَةِ","Al-Bayyina","The Evidence",8,"D"],["سُورَةُ الزَّلۡزَلَةِ","Az-Zalzala","The Earthquake",8,"D"],["سُورَةُ العَادِيَاتِ","Al-Aadiyaat","The Chargers",11,"M"],["سُورَةُ القَارِعَةِ","Al-Qaari'a","The Calamity",11,"M"],["سُورَةُ التَّكَاثُرِ","At-Takaathur","Competition",8,"M"],["سُورَةُ العَصۡرِ","Al-Asr","The Declining Day, Epoch",3,"M"],["سُورَةُ الهُمَزَةِ","Al-Humaza","The Traducer",9,"M"],["سُورَةُ الفِيلِ","Al-Fil","The Elephant",5,"M"],["سُورَةُ قُرَيۡشٍ","Quraish","Quraysh",4,"M"],["سُورَةُ المَاعُونِ","Al-Maa'un","Almsgiving",7,"M"],["سُورَةُ الكَوۡثَرِ","Al-Kawthar","Abundance",3,"M"],["سُورَةُ الكَافِرُونَ","Al-Kaafiroon","The Disbelievers",6,"M"],["سُورَةُ النَّصۡرِ","An-Nasr","Divine Support",3,"D"],["سُورَةُ المَسَدِ","Al-Masad","The Palm Fibre",5,"M"],["سُورَةُ الإِخۡلَاصِ","Al-Ikhlaas","Sincerity",4,"M"],["سُورَةُ الفَلَقِ","Al-Falaq","The Dawn",5,"M"],["سُورَةُ النَّاسِ","An-Naas","Mankind",6,"M"]];
@@ -273,7 +414,6 @@ function lastIndexAtMost(arr, target) {
 }
 function pageForGlobal(g) { return lastIndexAtMost(PAGE_START_GLOBAL, g) + 1; }
 function pageForRef(surah, ayah) { return pageForGlobal(globalIndex(surah, ayah)); }
-function pageForSurah(surah) { return pageForRef(surah, 1); }
 function juzForGlobal(g) { return lastIndexAtMost(JUZ_START_GLOBAL, g) + 1; }
 
 function walkRefs(startSurah, startAyah, count) {
@@ -299,26 +439,12 @@ const DUA_KHATM_TEXT = `اللَّهُمَّ ارْحَمْنِي بِالْقُ
 
 اللَّهُمَّ اجْعَلِ الْقُرْآنَ الْعَظِيمَ رَبِيعَ قَلْبِي، وَنُورَ صَدْرِي، وَجَلَاءَ حُزْنِي، وَذَهَابَ هَمِّي وَغَمِّي.
 
-اللَّهُمَّ لَكَ الْحَمْدُ حَتَّى تَرْضَى، وَلَكَ الْحَمْدُ إِذَا رَضِيتَ، وَلَكَ الْحَمْدُ بَعْدَ الرِّضَا، وَلَكَ الْحَمْدُ عَلَى نِعَمِكَ الَّتِي لَا تُعَدُّ وَلَا تُحْصَى، وَلَكَ الْحَمْدُ أَنْ بَلَّغْتَنَا خَتْمَ كِتَابِكَ الْكَرِيمِ.
-
-اللَّهُمَّ تَقَبَّلْ مِنَّا خَتْمَ الْقُرْآنِ، وَاكْتُبْ لَنَا بِهِ الْأَجْرَ الْعَظِيمَ، وَوَفِّقْنَا لِخَتَمَاتٍ عَدِيدَةٍ فِي صِحَّةٍ وَعَافِيَةٍ وَإِيمَانٍ.
-
-رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.
-
-وَصَلَّى اللَّهُ وَسَلَّمَ عَلَى نَبِيِّنَا مُحَمَّدٍ، وَعَلَى آلِهِ وَصَحْبِهِ أَجْمَعِينَ.`;
+اللَّهُمَّ لَكَ الْحَمْدُ حَتَّى تَرْضَى، وَلَكَ الْحَمْدُ إِذَا رَضِيتَ، وَلَكَ الْحَمْدُ بَعْدَ الرِّضَا، وَلَكَ الْحَمْدُ عَلَى نِعَمِكَ الَّتِي لَا تُعَدُّ وَلَا تُحْصَى، وَلَكَ الْحَمْدُ أَنْ بَلَّغْتَنَا خَتْمَ كِتَابِكَ الْكَرِيمِ.`;
 
 function openDuaKhatmModal() {
   openModal(`
     <h3 data-i18n="quran_dua_khatm_title">دوعای ختمی قورئان</h3>
     <div class="dua-khatm-text">${DUA_KHATM_TEXT}</div>
-  `);
-}
-
-function offerDuaKhatm() {
-  openModal(`
-    <h3 data-i18n="quran_khatm_congrats_title">پیرۆزە! 🎉</h3>
-    <p data-i18n="quran_khatm_congrats">پیرۆزە! تۆ خوێندنەوەی تەواوی قورئانی پیرۆزت تەواو کرد.</p>
-    <button class="btn-primary" style="width:100%; margin-top:8px" onclick="closeModal(); openDuaKhatmModal();" data-i18n="quran_khatm_view_dua">بینینی دوعای ختم</button>
   `);
 }
 
@@ -338,8 +464,6 @@ function loadSettings() {
   const defaults = { theme: 'classic', fontSize: 26, showTafsir: false };
   try {
     const saved = JSON.parse(localStorage.getItem('quran_settings') || '{}');
-    // Older saved settings may still carry colorMode/showTajweed keys —
-    // drop them silently now that Tajweed colouring has been removed.
     delete saved.colorMode;
     delete saved.showTajweed;
     return Object.assign(defaults, saved);
@@ -351,7 +475,7 @@ function loadBookmarks() {
   try {
     const raw = JSON.parse(localStorage.getItem('quran_bookmarks') || '[]');
     return raw.map((b) => ({
-      id: b.id || `${b.surah}-${b.ayah}-${b.savedAt || Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: b.id || `${b.surah}-${b.ayah}-${Date.now()}`,
       surah: b.surah,
       ayah: b.ayah,
       page: b.page || pageForRef(b.surah, b.ayah),
@@ -409,10 +533,10 @@ async function fetchCombined(kind, ref, editions) {
 }
 
 // ============================================================
-// Loading + rendering the reader
+// Rendering Reader & Custom Surah Banners (Image 1 replica)
 // ============================================================
 function showReaderLoading() {
-  document.getElementById('quranFlow').innerHTML = `<p class="sub" style="text-align:center">${t('prayer_loading')}</p>`;
+  document.getElementById('quranFlow').innerHTML = `<p class="sub" style="text-align:center; padding: 40px 0;">${t('prayer_loading')}</p>`;
 }
 function showReaderError() {
   document.getElementById('quranFlow').innerHTML = `<div class="empty-state">${t('prayer_error')}</div>`;
@@ -422,16 +546,15 @@ async function loadAndRenderPage(pageNum, focusRef) {
   showReaderLoading();
   try {
     const [textAyahs, tafsirAyahs] = await fetchCombined('page', pageNum, [TEXT_EDITION, TAFSIR_EDITION]);
-    
     const count = textAyahs.length;
     const start = PAGE_STARTS[pageNum - 1];
     const refs = walkRefs(start[0], start[1], count);
     
     currentAyahs = refs.map((r, i) => ({ 
-        surah: r.surah, 
-        ayah: r.ayah, 
-        arabicText: (textAyahs[i] && textAyahs[i].text) || '', 
-        tafsir: (tafsirAyahs[i] && tafsirAyahs[i].text) || '' 
+      surah: r.surah, 
+      ayah: r.ayah, 
+      arabicText: (textAyahs[i] && textAyahs[i].text) || '', 
+      tafsir: (tafsirAyahs[i] && tafsirAyahs[i].text) || '' 
     }));
     
     renderReader(focusRef);
@@ -440,11 +563,14 @@ async function loadAndRenderPage(pageNum, focusRef) {
   }
 }
 
+// Ornate Golden Surah Frame (Mirrors Image 1 Design)
 function surahDividerHtml(surahNum) {
   const m = SURAH_META[surahNum - 1];
   return `<div class="surah-divider">
-    <div class="surah-divider-name">${m[0]}</div>
-    <div class="surah-divider-meta">${escapeHtml(m[2])} · ${m[3]} ${t('quran_ayahs')} · ${m[4] === 'M' ? t('quran_meccan') : t('quran_medinan')}</div>
+    <div class="surah-frame">
+      <div class="surah-divider-name">${m[0]}</div>
+      <div class="surah-divider-meta">${escapeHtml(m[2])} · ${m[3]} ${t('quran_ayahs')} · ${m[4] === 'M' ? t('quran_meccan') : t('quran_medinan')}</div>
+    </div>
   </div>`;
 }
 
@@ -453,8 +579,13 @@ function renderReader(focusRef) {
   const flowMode = !settings.showTafsir;
   let html = '';
   let lastSurah = null;
+
   currentAyahs.forEach((a) => {
-    if (a.surah !== lastSurah) { html += surahDividerHtml(a.surah); lastSurah = a.surah; }
+    if (a.surah !== lastSurah) {
+      html += surahDividerHtml(a.surah);
+      lastSurah = a.surah;
+    }
+
     if (flowMode) {
       html += `<span class="ayah-unit" data-surah="${a.surah}" data-ayah="${a.ayah}">${a.arabicText}<span class="ayah-num">${arabicNumeral(a.ayah)}</span></span> `;
     } else {
@@ -492,7 +623,9 @@ function renderReader(focusRef) {
 
 function applyReaderSettings() {
   document.body.dataset.qtheme = settings.theme;
-  document.getElementById('quranPage').style.setProperty('--q-font-size', settings.fontSize + 'px');
+  const immersive = document.body.classList.contains('q-immersive');
+  const effectiveSize = settings.fontSize + (immersive ? 4 : 0);
+  document.getElementById('quranPage').style.setProperty('--q-font-size', effectiveSize + 'px');
 }
 
 function markBookmarksInDom() {
@@ -516,16 +649,19 @@ function setupPositionObserver() {
 }
 
 // ============================================================
-// Navigation — Mushaf page mode only (1..604)
+// Header & Bottom Control Bar Updates
 // ============================================================
 function updateReaderHeader() {
   const start = PAGE_STARTS[currentPage - 1];
   const m = SURAH_META[start[0] - 1];
   const juz = juzForGlobal(PAGE_START_GLOBAL[currentPage - 1]);
-  document.getElementById('readerTitle').textContent = `${t('quran_page_word')} ${arabicNumeral(currentPage)}`;
-  document.getElementById('readerSubtitle').textContent = `${m[0]} · ${t('quran_juz_word')} ${arabicNumeral(juz)}`;
-  const pageLabel = `${t('quran_page_word')} ${arabicNumeral(currentPage)} / ${arabicNumeral(TOTAL_PAGES)}`;
+  
+  document.getElementById('topbarSurahTitle').textContent = m[0];
+  document.getElementById('topbarJuzBadge').textContent = `${t('quran_juz_word')} ${arabicNumeral(juz)}`;
+  
+  const pageLabel = `لاپەڕە ${arabicNumeral(currentPage)} / ${arabicNumeral(TOTAL_PAGES)}`;
   document.getElementById('pageIndicatorBtn').textContent = pageLabel;
+  
   const badge = document.getElementById('immersivePageBadge');
   if (badge) badge.textContent = pageLabel;
 }
@@ -552,16 +688,14 @@ function gotoPage(n) {
 function nextPage() { if (currentPage < TOTAL_PAGES) gotoPage(currentPage + 1); }
 function prevPage() { if (currentPage > 1) gotoPage(currentPage - 1); }
 
-function handleBack() {
-  history.back();
-}
+function handleBack() { history.back(); }
 
 function openGotoPageModal() {
   closeModal();
   openModal(`
     <h3 data-i18n="quran_goto_page">چوون بۆ لاپەڕەیەک</h3>
     <div class="field">
-      <input type="number" id="gotoPageInput" min="1" max="${TOTAL_PAGES}" data-i18n-placeholder="quran_goto_page_placeholder" placeholder="ژمارەی لاپەڕە (١ - ٦٠٤)" style="font-size:18px; text-align:center">
+      <input type="number" id="gotoPageInput" min="1" max="${TOTAL_PAGES}" placeholder="ژمارەی لاپەڕە (١ - ٦٠٤)" style="font-size:18px; text-align:center">
     </div>
     <button class="btn-primary" id="gotoPageBtn" data-i18n="quran_go_btn">بچۆ</button>
   `);
@@ -573,9 +707,7 @@ function openGotoPageModal() {
   });
 }
 
-// ============================================================
-// Reader gestures
-// ============================================================
+// Gestures
 let _lastGestureAt = 0;
 function setupReaderGestures() {
   const el = document.getElementById('readerCard');
@@ -601,17 +733,11 @@ function setupReaderGestures() {
       return;
     }
     
-    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) handleReaderTap(tt.clientX, tt.target);
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) handleReaderTap(tt.clientX);
   }, { passive: true });
-  
-  el.addEventListener('click', (e) => {
-    if (Date.now() - _lastGestureAt < 500) return; 
-    if (e.target.closest && e.target.closest('button, a, input, .ayah-mini-btn')) return;
-    handleReaderTap(e.clientX, e.target);
-  });
 }
 
-function handleReaderTap(clientX, targetEl) {
+function handleReaderTap(clientX) {
   const rect = document.getElementById('readerCard').getBoundingClientRect();
   const ratio = (clientX - rect.left) / rect.width;
   if (ratio < 0.3) nextPage();
@@ -619,14 +745,7 @@ function handleReaderTap(clientX, targetEl) {
   else toggleFullscreen();
 }
 
-// ============================================================
-// Bookmarks 
-// ============================================================
-function defaultBookmarkName(surah, ayah) {
-  const m = SURAH_META[surah - 1];
-  return `${m[0]} — ${t('quran_ayahs')} ${arabicNumeral(ayah)}`;
-}
-
+// Bookmarks
 function toggleAyahBookmark(surah, ayah) {
   const existing = bookmarks.find((b) => b.surah === surah && b.ayah === ayah);
   if (existing) {
@@ -636,41 +755,23 @@ function toggleAyahBookmark(surah, ayah) {
     toast(t('quran_bookmark_removed_toast'));
     return;
   }
-  openAddBookmarkModal(surah, ayah);
-}
-
-function openAddBookmarkModal(surah, ayah) {
-  const def = defaultBookmarkName(surah, ayah);
-  closeModal();
-  openModal(`
-    <h3 data-i18n="quran_add_bookmark_title">زیادکردنی نیشانە</h3>
-    <div class="field">
-      <input type="text" id="bookmarkNameInput" value="${escapeHtml(def)}" maxlength="60" style="font-size:15px">
-    </div>
-    <button class="btn-primary" id="saveBookmarkBtn" data-i18n="quran_bookmark_save">پاشەکەوتکردن</button>
-  `);
-  const input = document.getElementById('bookmarkNameInput');
-  input.focus(); input.select();
-  document.getElementById('saveBookmarkBtn').addEventListener('click', () => {
-    const name = (input.value || '').trim() || def;
-    bookmarks.unshift({ id: `${surah}-${ayah}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, surah, ayah, page: pageForRef(surah, ayah), name, savedAt: Date.now() });
-    saveBookmarks();
-    markBookmarksInDom();
-    closeModal();
-    toast(t('quran_bookmark_added_toast'));
-  });
+  const m = SURAH_META[surah - 1];
+  const name = `${m[0]} — ${t('quran_ayahs')} ${arabicNumeral(ayah)}`;
+  bookmarks.unshift({ id: `${surah}-${ayah}-${Date.now()}`, surah, ayah, page: pageForRef(surah, ayah), name, savedAt: Date.now() });
+  saveBookmarks();
+  markBookmarksInDom();
+  toast(t('quran_bookmark_added_toast'));
 }
 
 function openBookmarksModal() {
   const rows = bookmarks.map((b) => `
-      <div class="bookmark-row-item">
-        <div class="info" onclick="closeModal(); openReaderAt(${b.surah}, ${b.ayah});">
-          <div class="name" style="font-family:'Amiri Quran','Amiri',serif">${escapeHtml(b.name || defaultBookmarkName(b.surah, b.ayah))}</div>
-          <div class="meta">${t('quran_page_word')} ${arabicNumeral(b.page || pageForRef(b.surah, b.ayah))}</div>
-        </div>
-        <button class="icon-sm-btn" onclick="renameBookmark('${b.id}')" title="${t('quran_bookmark_rename')}">✎</button>
-        <button class="icon-sm-btn" onclick="removeBookmarkById('${b.id}')">✕</button>
-      </div>`).join('');
+    <div class="bookmark-row-item">
+      <div class="info" onclick="closeModal(); openReaderAt(${b.surah}, ${b.ayah});">
+        <div class="name" style="font-family:'Amiri Quran','Amiri',serif">${escapeHtml(b.name)}</div>
+        <div class="meta">${t('quran_page_word')} ${arabicNumeral(b.page || pageForRef(b.surah, b.ayah))}</div>
+      </div>
+      <button class="icon-sm-btn" onclick="removeBookmarkById('${b.id}')">✕</button>
+    </div>`).join('');
   openModal(`
     <h3 data-i18n="quran_bookmarks_title">نیشانەکان</h3>
     ${bookmarks.length ? rows : `<div class="empty-state" data-i18n="quran_bookmarks_empty">هیچ نیشانەیەکت نییە</div>`}
@@ -682,55 +783,29 @@ function removeBookmarkById(id) {
   markBookmarksInDom();
   openBookmarksModal();
 }
-function renameBookmark(id) {
-  const b = bookmarks.find((x) => x.id === id);
-  if (!b) return;
-  closeModal();
-  openModal(`
-    <h3 data-i18n="quran_bookmark_rename">گۆڕینی ناو</h3>
-    <div class="field">
-      <input type="text" id="renameBookmarkInput" value="${escapeHtml(b.name || defaultBookmarkName(b.surah, b.ayah))}" maxlength="60" style="font-size:15px">
-    </div>
-    <button class="btn-primary" id="renameBookmarkSaveBtn" data-i18n="quran_bookmark_save">پاشەکەوتکردن</button>
-  `);
-  const input = document.getElementById('renameBookmarkInput');
-  input.focus(); input.select();
-  document.getElementById('renameBookmarkSaveBtn').addEventListener('click', () => {
-    b.name = (input.value || '').trim() || defaultBookmarkName(b.surah, b.ayah);
-    saveBookmarks();
-    openBookmarksModal();
-  });
-}
 
-// ============================================================
 // Settings
-// ============================================================
 const THEME_LIST = [
-  ['classic', '#FFFDF7', 'quran_theme_classic'],
-  ['night', '#12181A', 'quran_theme_night'],
-  ['sepia', '#F1E7D0', 'quran_theme_sepia'],
-  ['emerald', '#0F2A22', 'quran_theme_emerald'],
-  ['sky', '#EAF3F6', 'quran_theme_sky'],
+  ['classic', '#FFFFFF', 'Classic'],
+  ['night', '#12181A', 'Night'],
+  ['sepia', '#F8F1E1', 'Sepia'],
+  ['emerald', '#0F2A22', 'Emerald'],
+  ['sky', '#EAF3F6', 'Sky'],
 ];
 
 function openSettingsModal() {
   openModal(`
     <h3 data-i18n="quran_settings_title">ڕێکخستنی خوێندنەوە</h3>
-
     <div class="theme-swatch-grid">
       ${THEME_LIST.map(([key, color]) => `
-        <div>
-          <div class="theme-swatch ${settings.theme === key ? 'selected' : ''}" style="background:${color}" onclick="setReaderTheme('${key}')"></div>
-        </div>
+        <div class="theme-swatch ${settings.theme === key ? 'selected' : ''}" style="background:${color}" onclick="setReaderTheme('${key}')"></div>
       `).join('')}
     </div>
-
     <div class="font-size-row">
-      <span style="font-size:20px">A</span>
+      <span style="font-size:18px">A</span>
       <input type="range" min="18" max="42" step="1" value="${settings.fontSize}" oninput="setFontSize(this.value)">
-      <span style="font-size:30px">A</span>
+      <span style="font-size:28px">A</span>
     </div>
-
     <div class="settings-row">
       <span data-i18n="quran_tafsir_toggle">پیشاندانی تەفسیری کوردی</span>
       <label class="toggle-switch">
@@ -738,34 +813,22 @@ function openSettingsModal() {
         <span class="track"></span><span class="thumb"></span>
       </label>
     </div>
-
-    <p class="attribution-note">تەفسیر: بورهان محەمەد ئەمین (تەفسیری ئاسان) · دەنگ: مشاری راشد عەفاسی — لە ڕێگەی Al Quran Cloud API</p>
   `);
 }
 function setReaderTheme(key) { settings.theme = key; saveSettings(); openSettingsModal(); }
 function setFontSize(v) { settings.fontSize = parseInt(v, 10); saveSettings(); }
 function setTafsir(v) { settings.showTafsir = !!v; saveSettings(); renderReader(); }
 
-// ============================================================
-// Audio recitation
-// ============================================================
+// Audio Recitation
 const audioPlayer = new Audio();
 let audioPlaylist = [];
 let audioIdx = 0;
 let audioPlaying = false;
 
-function resetAudioState() {
-  stopAudio();
-  audioPlaylist = [];
-}
+function resetAudioState() { stopAudio(); audioPlaylist = []; }
 function updatePlayIcon() {
-  const icon = audioPlaying ? '⏸' : '▶';
   const iconEl = document.getElementById('playIcon');
-  if (iconEl) iconEl.textContent = icon;
-  const labelEl = document.getElementById('playLabel');
-  if (labelEl) labelEl.textContent = audioPlaying ? t('quran_pause_audio') : t('quran_play_audio');
-  const navBtn = document.getElementById('pageNavPlayBtn');
-  if (navBtn) navBtn.textContent = icon;
+  if (iconEl) iconEl.textContent = audioPlaying ? '⏸' : '▶';
 }
 function stopAudio() {
   audioPlayer.pause();
@@ -814,52 +877,29 @@ function playAudioAt(i) {
 audioPlayer.addEventListener('ended', () => {
   audioIdx++;
   if (audioIdx < audioPlaylist.length) { playAudioAt(audioIdx); return; }
-  
   if (audioPlaying && currentPage < TOTAL_PAGES) {
     pendingAutoPlay = true; 
     gotoPage(currentPage + 1);
-  } else if (currentPage === TOTAL_PAGES) {
-    stopAudio();
-    offerDuaKhatm();
-  } else {
-    stopAudio();
-  }
+  } else { stopAudio(); }
 });
 
-// ============================================================
-// Fullscreen / immersive reading mode
-// A plain CSS overlay (see .q-immersive rules above) rather than the
-// native browser Fullscreen API, which rendered inconsistently on
-// mobile (blank areas / overlapping text on some devices).
-// ============================================================
+// Fullscreen
 function enterImmersive() {
-  if (document.body.classList.contains('q-immersive')) return;
   document.body.classList.add('q-immersive');
-  // Let the phone's hardware/gesture back button close immersive mode
-  // instead of leaving the page, by consuming one history entry.
+  applyReaderSettings();
   history.pushState({ qImmersive: true }, '');
 }
 function exitImmersive() {
-  if (!document.body.classList.contains('q-immersive')) return;
   document.body.classList.remove('q-immersive');
+  applyReaderSettings();
   if (history.state && history.state.qImmersive) history.back();
 }
 function toggleFullscreen() {
   if (document.body.classList.contains('q-immersive')) exitImmersive();
   else enterImmersive();
 }
-window.addEventListener('popstate', () => {
-  if (document.body.classList.contains('q-immersive')) {
-    document.body.classList.remove('q-immersive');
-  }
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') exitImmersive();
-});
 
-// ============================================================
 // Init
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   const lp = loadLastPosition();
   if (lp && lp.surah && lp.ayah) {
