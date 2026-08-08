@@ -112,7 +112,8 @@
   body.q-immersive .page.wide { padding: 0; margin: 0; max-width: none; width: 100%; }
 
   body.q-immersive #readerCard {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     inset: 0;
     z-index: 500;
@@ -124,6 +125,11 @@
     margin: 0;
     padding: max(22px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   }
+  /* Vertically centers short pages instead of leaving them stranded
+     near the top with empty space below. On pages with more text than
+     fits, the auto margins collapse to 0 and it behaves like normal
+     top-aligned, scrollable content — no clipping either way. */
+  body.q-immersive #quranFlow { margin: auto 0; width: 100%; }
 
   .immersive-page-badge {
     display: none;
