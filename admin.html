@@ -221,7 +221,6 @@
       <h2 data-i18n="azkar_page_heading">ئەزکار</h2>
       <div style="display:flex; gap:8px; flex-wrap:wrap">
         <a class="btn-outline" id="azkarPreviewLink" href="#" target="_blank" data-i18n="btn_preview">پێشبینین</a>
-        <button class="btn-outline" onclick="quickAddAzkarStarter()" data-i18n="btn_quick_add_azkar">زیادکردنی خێرا</button>
         <button class="btn-add" onclick="openAzkarCategoryModal()" data-i18n="btn_add_section">زیادکردنی بەش</button>
       </div>
     </div>
@@ -1431,6 +1430,13 @@ async function renderAzkarAdmin() {
   azkarCategoriesCache = cats || [];
   azkarItemsCache = its || [];
 
+  // First time this institution has no Azkar sections at all — seed
+  // the four defaults (Morning / Evening / General / Duty) instead of
+  // showing an empty state and waiting for a manual "quick add".
+  if (!azkarCategoriesCache.length) {
+    await seedDefaultAzkar();
+  }
+
   const list = document.getElementById('azkarCategoriesList');
   if (!azkarCategoriesCache.length) {
     list.innerHTML = `<div class="empty-state">${t('empty_azkar_categories')}</div>`;
@@ -1536,7 +1542,11 @@ async function deleteAzkarCategory(categoryId, evt) {
   renderAzkarAdmin();
 }
 
-async function quickAddAzkarStarter() {
+// Morning/Evening/General/Duty are the institution's default Azkar
+// sections — seeded automatically (see renderAzkarAdmin below) the
+// first time an institution has none yet, instead of requiring an
+// admin to press a "quick add" button.
+async function seedDefaultAzkar() {
   const starter = [
     { category: 'ئەزکاری بەیانی', items: [
       { arabic_text: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ', translit: 'Aṣbaḥnā wa aṣbaḥal-mulku lillāh, wal-ḥamdu lillāh', meaning: 'بەیانیمان کرد و موڵکداری هەر بۆ خودایە', target_count: 1 },
@@ -1577,11 +1587,10 @@ async function quickAddAzkarStarter() {
     { category: 'ئەرک', items: [] },
   ];
 
-  // Safe to run more than once: an institution that already used the
-  // starter (e.g. before the fuller morning/evening lists existed, or
-  // before the Duty section existed) can click it again to top up —
-  // existing sections/items are matched by name/text and skipped
-  // rather than duplicated.
+  // Safe to call more than once: matches existing sections/items by
+  // name/text and skips them rather than duplicating, so re-running
+  // this later (e.g. after adding the fuller morning/evening lists)
+  // just tops up whatever's missing.
   for (const cat of starter) {
     let catRow = azkarCategoriesCache.find((c) => c.institution_id === currentInstitution.id && c.name === cat.category);
     if (!catRow) {
@@ -1610,8 +1619,6 @@ async function quickAddAzkarStarter() {
     const { data: inserted } = await sb.from('azkar_items').insert(rows).select();
     if (inserted) azkarItemsCache.push(...inserted);
   }
-  toast(t('toast_created'));
-  renderAzkarAdmin();
 }
 
 function openNotificationModal() {
