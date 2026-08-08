@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>ئەزکار</title>
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4B43">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <button class="icon-btn" onclick="history.back()">←</button>
+    <span id="azkarHeaderTitle" data-i18n="azkar_page_heading">ئەزکار</span>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle">
+      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); renderCategoryTabs(); renderItems();">کوردی</button>
+      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); renderCategoryTabs(); renderItems();">العربية</button>
+    </div>
+    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
+      <span class="theme-toggle-icon">☾</span>
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Free-form tasbih counter -->
+  <div class="hero-card" style="text-align:center; margin-top:0">
+    <p class="sub" data-i18n="azkar_tap_hint" style="margin-bottom:0">کرتە بکە بۆ ژماردن</p>
+    <button class="azkar-counter-btn" id="counterBtn">📿</button>
+    <div class="azkar-counter-count" id="counterCount">0</div>
+    <div>
+      <button class="btn-outline" onclick="resetCounter()" data-i18n="azkar_counter_reset">دووبارە دەستپێکردن</button>
+    </div>
+  </div>
+
+  <div class="nav-grid" id="azkarTabs"></div>
+
+  <div id="azkarList"></div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // azkar.html is reached from several different apps that each keep
+  // their own separate session (see js/supabase-client.js). Passing
+  // ?role=student (etc.) lets it borrow that app's already-active
+  // session by using the same storage key — no second login, and it
+  // still works with no role/session at all (falls back to public
+  // read-only access, same as before).
+  const params = new URLSearchParams(window.location.search);
+  const roleParam = params.get('role');
+  const sb = window.supabase.createClient(
+    window.APP_CONFIG.SUPABASE_URL,
+    window.APP_CONFIG.SUPABASE_ANON_KEY,
+    roleParam ? { auth: { storageKey: `sb-${roleParam}-auth-token` } } : undefined
+  );
+
+  const slug = params.get('inst');
+  let institutionId = null;
+  let categories = [];
+  let items = [];
+  let activeCategoryId = null;
+
+  let myProfileId = null;
+  let myStageId = null; // resolved for student/teacher viewers, used to filter stage-scoped items
+  let serverProgress = {}; // itemId -> count, only populated for a logged-in student
+
+  async function init() {
+    if (slug) {
+      const { data: inst } = await sb.from('institutions').select('id, name, primary_color, secondary_color').eq('slug', slug).maybeSingle();
+      if (inst) {
+        institutionId = inst.id;
+        if (inst.primary_color) document.documentElement.style.setProperty('--teal', inst.primary_color);
+        if (inst.secondary_color) document.documentElement.style.setProperty('--gold', inst.secondary_color);
+      }
+    }
+
+    if (roleParam) {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        myProfileId = session.user.id;
+        if (roleParam === 'student') {
+          const { data: st } = await sb.from('students').select('stage_id').eq('profile_id', myProfileId).maybeSingle();
+          myStageId = st ? st.stage_id : null;
+          const { data: progressRows } = await sb.from('azkar_progress').select('item_id, count')
+            .eq('student_profile_id', myProfileId).eq('progress_date', todayKey());
+          (progressRows || []).forEach((r) => { serverProgress[r.item_id] = r.count; });
+        } else if (roleParam === 'teacher') {
+          const { data: ts } = await sb.from('teacher_stages').select('stage_id').eq('teacher_profile_id', myProfileId).maybeSingle();
+          myStageId = ts ? ts.stage_id : null;
+        }
+      }
+    }
+
+    if (institutionId) {
+      const [{ data: cats }, { data: its }] = await Promise.all([
+        sb.from('azkar_categories').select('*').eq('institution_id', institutionId).order('order_index'),
+        sb.from('azkar_items').select('*').eq('institution_id', institutionId).order('order_index'),
+      ]);
+      categories = cats || [];
+      const allItems = its || [];
+      // Admin/no-role sees everything; student/teacher/parent see general (no stage) + their own stage's items
+      items = (roleParam === 'student' || roleParam === 'teacher')
+        ? allItems.filter((i) => !i.stage_id || i.stage_id === myStageId)
+        : allItems;
+    }
+
+    renderCategoryTabs();
+    renderItems();
+  }
+
+  // Same keyword-based icon per category as admin.html/teacher.html use
+  // (azkar.html has no shared JS include for it, so kept local here too).
+  function azkarCategoryIcon(name) {
+    const n = name || '';
+    if (n.includes('بەیانی') || n.includes('صباح')) return '☀️';
+    if (n.includes('ئێوارە') || n.includes('مساء')) return '🌙';
+    if (n.includes('ئەرک') || n.includes('واجب')) return '📝';
+    return '📿';
+  }
+
+  function renderCategoryTabs() {
+    const box = document.getElementById('azkarTabs');
+    if (!categories.length) { box.innerHTML = ''; return; }
+    if (!activeCategoryId || !categories.find((c) => c.id === activeCategoryId)) {
+      activeCategoryId = categories[0].id;
+    }
+    // Icon-grid buttons in rows, matching the same style used for the
+    // teacher/parent/student icon buttons elsewhere in the app.
+    box.innerHTML = categories.map((c) => `
+      <button class="nav-grid-item ${c.id === activeCategoryId ? 'active' : ''}" data-cat="${c.id}">
+        <span class="nav-icon">${azkarCategoryIcon(c.name)}</span>
+        <span>${escapeHtml(c.name)}</span>
+      </button>
+    `).join('');
+    box.querySelectorAll('.nav-grid-item').forEach((tb) => {
+      tb.addEventListener('click', () => {
+        activeCategoryId = tb.dataset.cat;
+        renderCategoryTabs();
+        renderItems();
+      });
+    });
+  }
+
+  function todayKey() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function progressKey(itemId) {
+    return `azkar_progress_${institutionId}_${itemId}_${todayKey()}`;
+  }
+  function getProgress(itemId) {
+    if (roleParam === 'student' && myProfileId) return serverProgress[itemId] || 0;
+    return parseInt(localStorage.getItem(progressKey(itemId)) || '0', 10);
+  }
+  async function setProgress(itemId, count) {
+    if (roleParam === 'student' && myProfileId) {
+      serverProgress[itemId] = count;
+      await sb.from('azkar_progress').upsert({
+        institution_id: institutionId,
+        item_id: itemId,
+        student_profile_id: myProfileId,
+        progress_date: todayKey(),
+        count,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'item_id,student_profile_id,progress_date' });
+    } else {
+      localStorage.setItem(progressKey(itemId), String(count));
+    }
+  }
+
+  function renderItems() {
+    const list = document.getElementById('azkarList');
+    if (!institutionId) {
+      list.innerHTML = `<div class="empty-state">${t('error_institution_not_found')}</div>`;
+      return;
+    }
+    const visible = activeCategoryId ? items.filter((i) => i.category_id === activeCategoryId) : items;
+    if (!visible.length) {
+      list.innerHTML = `<div class="empty-state">${t('azkar_empty')}</div>`;
+      return;
+    }
+    list.innerHTML = visible.map((item) => {
+      const count = getProgress(item.id);
+      const done = count >= item.target_count;
+      return `
+        <div class="azkar-card">
+          <div class="arabic">${escapeHtml(item.arabic_text)}</div>
+          ${item.translit ? `<div class="translit">${escapeHtml(item.translit)}</div>` : ''}
+          ${item.meaning ? `<div class="meaning">${escapeHtml(item.meaning)}</div>` : ''}
+          <div class="azkar-count-label" id="count-label-${item.id}">${done ? t('azkar_done_msg') : `${count} / ${item.target_count}`}</div>
+          <button class="azkar-item-counter ${done ? 'done' : ''}" onclick="tapItem('${item.id}', ${item.target_count})" id="counter-${item.id}">
+            ${done ? '✅' : '📿'}
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function tapItem(itemId, target) {
+    let count = getProgress(itemId);
+    if (count >= target) return; // already done, tapping again does nothing
+    count++;
+    setProgress(itemId, count);
+    const btn = document.getElementById(`counter-${itemId}`);
+    const label = document.getElementById(`count-label-${itemId}`);
+    if (count >= target) {
+      btn.classList.add('done');
+      btn.innerHTML = '✅';
+      if (label) label.textContent = t('azkar_done_msg');
+      if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+      toast(t('azkar_done_msg'));
+    } else {
+      if (label) label.textContent = `${count} / ${target}`;
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+  }
+
+  // ---------- Free-form tasbih counter (unrelated to per-item ones) ----------
+  // The button itself always shows the tasbih glyph (📿); the running
+  // total is written separately underneath it.
+  let count = parseInt(localStorage.getItem('azkar_count') || '0', 10);
+  const counterBtn = document.getElementById('counterBtn');
+  const counterCountEl = document.getElementById('counterCount');
+  counterCountEl.textContent = count;
+  counterBtn.addEventListener('click', () => {
+    count++;
+    localStorage.setItem('azkar_count', count);
+    counterCountEl.textContent = count;
+    if (navigator.vibrate) navigator.vibrate(10);
+  });
+  function resetCounter() {
+    count = 0;
+    localStorage.setItem('azkar_count', 0);
+    counterCountEl.textContent = 0;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+  function toast(message) {
+    let el = document.getElementById('toastEl');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toastEl';
+      el.className = 'toast';
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.className = 'toast show';
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+
+  init();
+</script>
+</body>
+</html>

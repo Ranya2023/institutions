@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>کاتی نوێژ</title>
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4B43">
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  /* ---------- Compact page shell so everything fits one screen ---------- */
+  .page { padding-top: clamp(10px, 2.2vh, 20px); padding-bottom: clamp(10px, 2vh, 18px); }
+  .topbar { padding: 10px 18px; }
+
+  /* ---------- Animated rainbow border around the hero card ---------- */
+  .glow-wrap {
+    position: relative;
+    border-radius: calc(var(--radius) + 4px);
+    padding: 3px;
+    overflow: hidden;
+    margin: 0 0 clamp(8px, 1.6vh, 16px);
+  }
+  .glow-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -60%;
+    background: conic-gradient(from 0deg,
+      #D64545, #E8862E, #E8B93B, #3F9E5C, #3B7DD8, #8A4FD1, #D64545);
+    animation: glowSpin 7s linear infinite;
+  }
+  @keyframes glowSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .glow-wrap::before { animation: none; } }
+  .glow-wrap .prayer-hero { position: relative; z-index: 1; margin: 0; }
+
+  /* ---------- Hero / date navigation (compacted) ---------- */
+  .prayer-hero {
+    text-align: center;
+    padding: clamp(12px, 2.4vh, 20px) 16px clamp(10px, 2vh, 16px);
+  }
+  .prayer-hero h1 { font-size: 16px; margin-bottom: 2px; }
+  .date-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; margin: 4px 0 0;
+  }
+  .nav-arrow {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--card); color: var(--teal);
+    font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    transition: transform .12s ease, background .15s ease; flex-shrink: 0;
+  }
+  html[data-theme="dark"] .nav-arrow { color: var(--gold); }
+  .nav-arrow:active { transform: scale(0.90); }
+  .nav-arrow:disabled { opacity: .35; }
+  .date-nav-center { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 110px; }
+  .weekday-label { font-family: 'Amiri', serif; font-weight: 700; font-size: 15px; color: var(--ink); }
+  .today-pill {
+    font-size: 10px; font-weight: 700; color: var(--teal);
+    background: rgba(31,75,67,.08); border: 1px solid var(--line);
+    border-radius: 999px; padding: 2px 10px;
+  }
+  html[data-theme="dark"] .today-pill { color: var(--gold); background: rgba(217,196,138,.10); }
+
+  .date-lines { margin-top: 5px; line-height: 1.45; }
+  .hijri-label { font-size: 12px; color: var(--muted); }
+  .gregorian-label { font-size: 10.5px; color: var(--muted); opacity: .82; }
+
+  .preview-note {
+    display: inline-block; font-size: 10.5px; font-weight: 600; color: var(--gold);
+    background: rgba(176,141,62,.10); border-radius: 999px; padding: 3px 12px; margin-top: 6px;
+  }
+
+  /* ---------- Countdown ---------- */
+  .countdown-wrap {
+    margin-top: clamp(8px, 1.6vh, 16px); padding: clamp(8px, 1.4vh, 14px) 12px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, rgba(31,75,67,.07), rgba(176,141,62,.08));
+    border: 1px solid var(--line);
+  }
+  html[data-theme="dark"] .countdown-wrap {
+    background: linear-gradient(135deg, rgba(111,165,150,.10), rgba(217,196,138,.08));
+  }
+  .countdown-label {
+    display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;
+    font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px;
+  }
+  #countdownPrayerName { color: var(--gold); font-weight: 800; }
+  .countdown-value {
+    font-family: 'Courier New', monospace; font-size: clamp(20px, 5vh, 28px); font-weight: 800;
+    color: var(--teal); letter-spacing: 1px;
+  }
+  html[data-theme="dark"] .countdown-value { color: var(--gold); }
+
+  /* ---------- Adjust toggle ---------- */
+  .toggle-row { margin-top: clamp(6px, 1.4vh, 12px); }
+  .toggle-original-btn {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    background: transparent; border: 1.5px dashed var(--line);
+    border-radius: 999px; padding: 5px 14px;
+  }
+  .toggle-original-btn:active { transform: scale(.96); }
+  .adjusted-note { font-size: 9.5px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+  /* ---------- Prayer list — one row per prayer, compact height to still fit one screen ---------- */
+  #prayerList {
+    display: flex; flex-direction: column; gap: clamp(5px, 1.1vh, 8px);
+  }
+  .prayer-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: clamp(8px, 1.6vh, 12px) 16px;
+    box-shadow: 0 2px 8px rgba(28,35,31,.04);
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+  .prayer-card.next { border: 2px solid var(--gold); background: rgba(176,141,62,.08); box-shadow: 0 4px 16px rgba(176,141,62,.18); }
+  .prayer-card .p-name { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; }
+  .prayer-card .p-icon {
+    width: 30px; height: 30px; border-radius: 50%; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    background: rgba(31,75,67,.08);
+  }
+  html[data-theme="dark"] .prayer-card .p-icon { background: rgba(111,165,150,.12); }
+  .prayer-card .p-time { display: flex; align-items: baseline; gap: 4px; }
+  .prayer-card .p-time .p-time-num { font-family: monospace; font-size: 16px; font-weight: 700; color: var(--teal); }
+  .prayer-card .p-time .p-time-period { font-size: 10.5px; font-weight: 700; color: var(--muted); }
+  html[data-theme="dark"] .prayer-card .p-time .p-time-num { color: var(--gold); }
+  .next-badge {
+    font-size: 9px; font-weight: 800; color: var(--gold); background: rgba(176,141,62,.15);
+    padding: 2px 8px; border-radius: 999px; margin-inline-start: 6px;
+  }
+
+  @media (max-width: 340px) {
+    .prayer-card .p-name { font-size: 12px; gap: 8px; }
+    .prayer-card .p-time .p-time-num { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <button class="icon-btn" onclick="history.back()">←</button>
+    <span data-i18n="prayer_page_heading">کاتی نوێژ</span>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle">
+      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); render();">کوردی</button>
+      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); render();">العربية</button>
+    </div>
+    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
+      <span class="theme-toggle-icon">☾</span>
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="glow-wrap">
+    <div class="hero-card prayer-hero">
+      <svg class="corner-ornament" viewBox="0 0 100 100" aria-hidden="true">
+        <g fill="none" stroke="var(--gold)" stroke-width="1.2">
+          <rect x="20" y="20" width="45" height="45" transform="rotate(45 42.5 42.5)"/>
+          <rect x="20" y="20" width="45" height="45"/>
+        </g>
+        <circle cx="42.5" cy="42.5" r="4" fill="var(--gold)"/>
+      </svg>
+      <h1>ڕانیە — Ranya</h1>
+
+      <div class="date-nav">
+        <button class="nav-arrow" id="prevDayBtn" onclick="navigateDay(-1)">›</button>
+        <div class="date-nav-center">
+          <div class="weekday-label" id="weekdayLabel"></div>
+          <button class="today-pill" id="todayBtn" onclick="goToday()" data-i18n="prayer_today_btn" style="display:none"></button>
+        </div>
+        <button class="nav-arrow" id="nextDayBtn" onclick="navigateDay(1)">‹</button>
+      </div>
+
+      <div class="date-lines">
+        <p class="hijri-label" id="hijriLabel"></p>
+        <p class="gregorian-label" id="gregorianLabel"></p>
+      </div>
+
+      <div class="preview-note" id="previewNote" data-i18n="prayer_preview_note" style="display:none"></div>
+
+      <div class="countdown-wrap" id="countdownWrap" style="display:none">
+        <div class="countdown-label">
+          <span data-i18n="prayer_time_remaining"></span>
+          <span data-i18n="prayer_until"></span>
+          <span id="countdownPrayerName"></span>
+        </div>
+        <div class="countdown-value" id="countdownValue">--:--:--</div>
+      </div>
+
+      <div class="toggle-row">
+        <button class="toggle-original-btn" id="toggleOriginalBtn" onclick="toggleOriginal()"></button>
+        <p class="adjusted-note" id="adjustedNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="prayerList">
+    <div class="empty-state" id="loadingState" data-i18n="prayer_loading">چاوەڕوان بە...</div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script>
+  // Ranya, Sulaymaniyah Governorate, Kurdistan Region, Iraq
+  const LATITUDE = 36.25500;
+  const LONGITUDE = 44.88361;
+  const CALC_METHOD = 3; // Muslim World League
+
+  const PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  const PRAYER_ICONS = { Fajr: '🌄', Sunrise: '🌅', Dhuhr: '☀️', Asr: '🌤️', Maghrib: '🌇', Isha: '🌙' };
+  const PRAYER_LABEL_KEYS = { Fajr: 'prayer_fajr', Sunrise: 'prayer_sunrise', Dhuhr: 'prayer_dhuhr', Asr: 'prayer_asr', Maghrib: 'prayer_maghrib', Isha: 'prayer_isha' };
+
+  // Manual adjustment (in minutes) applied on top of the API-calculated times,
+  // requested for Ranya so the displayed times match the local mosque schedule.
+  // Shown by default; the "original API time" button reveals the raw, unadjusted values.
+  const PRAYER_OFFSETS = { Fajr: 17, Sunrise: 2, Dhuhr: 7, Asr: 0, Maghrib: 7, Isha: -6 };
+
+  // ---------- Date helpers (local time, not UTC, so navigation never skips/repeats a day) ----------
+  function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  function isSameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+  function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function formatDDMMYYYY(d) { return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; }
+
+  let prayerData = null;      // API response for the currently viewed date
+  let viewDate = startOfDay(new Date());
+  let showOriginal = false;   // false = adjusted times (default), true = raw API times
+  let isLoading = false;
+  let countdownTimer = null;
+  let countdownTarget = null;
+
+  // ---------- Fetching ----------
+  async function loadPrayerTimes(date) {
+    isLoading = true;
+    setNavDisabled(true);
+    const cacheKey = `prayer_times_${formatDateKey(date)}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      prayerData = JSON.parse(cached);
+      render();
+      isLoading = false;
+      setNavDisabled(false);
+      return;
+    }
+    document.getElementById('prayerList').innerHTML = `<div class="empty-state" data-i18n="prayer_loading">${t('prayer_loading')}</div>`;
+    try {
+      const url = `https://api.aladhan.com/v1/timings/${formatDDMMYYYY(date)}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${CALC_METHOD}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.code === 200 && json.data) {
+        prayerData = json.data;
+        localStorage.setItem(cacheKey, JSON.stringify(prayerData));
+        render();
+      } else {
+        showError();
+      }
+    } catch (err) {
+      showError();
+    } finally {
+      isLoading = false;
+      setNavDisabled(false);
+    }
+  }
+
+  function setNavDisabled(state) {
+    const prev = document.getElementById('prevDayBtn');
+    const next = document.getElementById('nextDayBtn');
+    if (prev) prev.disabled = state;
+    if (next) next.disabled = state;
+  }
+
+  function showError() {
+    document.getElementById('prayerList').innerHTML = `<div class="empty-state" data-i18n="prayer_error">نەتوانرا کاتەکان باربکرێن</div>`;
+    applyI18n();
+  }
+
+  // ---------- Navigation ----------
+  function navigateDay(delta) {
+    if (isLoading) return;
+    const d = new Date(viewDate);
+    d.setDate(d.getDate() + delta);
+    viewDate = d;
+    loadPrayerTimes(viewDate);
+  }
+  function goToday() {
+    if (isLoading) return;
+    viewDate = startOfDay(new Date());
+    loadPrayerTimes(viewDate);
+  }
+  function toggleOriginal() {
+    showOriginal = !showOriginal;
+    render();
+  }
+
+  // ---------- Time helpers ----------
+  function addMinutes(hhmm, minutes) {
+    const clean = hhmm.slice(0, 5);
+    const [h, m] = clean.split(':').map(Number);
+    let total = ((h * 60 + m + minutes) % 1440 + 1440) % 1440;
+    const nh = Math.floor(total / 60), nm = total % 60;
+    return `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`;
+  }
+  function getDisplayTime(key) {
+    const raw = prayerData.timings[key];
+    return showOriginal ? raw.slice(0, 5) : addMinutes(raw, PRAYER_OFFSETS[key] || 0);
+  }
+  // 12-hour display only — countdown/next-prayer math still runs on the 24h value above.
+  function formatTime12(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    const period = h >= 12 ? t('prayer_pm') : t('prayer_am');
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return `<span class="p-time-num">${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')}</span><span class="p-time-period">${period}</span>`;
+  }
+  function getPrayerMinutes(key) {
+    const [h, m] = getDisplayTime(key).split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  // Returns { key, target(Date) } for the next prayer today, or null if today's prayers are all done
+  // (or if we're not viewing today at all).
+  function computeNextPrayerTarget() {
+    const now = new Date();
+    if (!isSameDay(viewDate, now)) return null;
+    for (const key of PRAYER_ORDER) {
+      if (key === 'Sunrise') continue;
+      const mins = getPrayerMinutes(key);
+      const target = new Date(now);
+      target.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+      if (target > now) return { key, target };
+    }
+    return null;
+  }
+
+  // If every prayer today has passed, fetch tomorrow's Fajr (cached) to keep the countdown accurate.
+  async function resolveTomorrowFajrCountdown() {
+    const tomorrow = new Date(viewDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const cacheKey = `prayer_times_${formatDateKey(tomorrow)}`;
+    let data = null;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      data = JSON.parse(cached);
+    } else {
+      try {
+        const url = `https://api.aladhan.com/v1/timings/${formatDDMMYYYY(tomorrow)}?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${CALC_METHOD}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.code === 200 && json.data) {
+          data = json.data;
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
+      } catch (err) { /* leave placeholder if this fails */ }
+    }
+    // Only apply if the user hasn't navigated away from "today" while this was in flight.
+    if (!data || !isSameDay(viewDate, new Date())) return;
+    const raw = data.timings.Fajr;
+    const fajrTime = showOriginal ? raw.slice(0, 5) : addMinutes(raw, PRAYER_OFFSETS.Fajr);
+    const [h, m] = fajrTime.split(':').map(Number);
+    const target = new Date(tomorrow);
+    target.setHours(h, m, 0, 0);
+    document.getElementById('countdownPrayerName').textContent = t(PRAYER_LABEL_KEYS.Fajr);
+    startCountdown(target);
+  }
+
+  function startCountdown(target) {
+    clearInterval(countdownTimer);
+    countdownTarget = target;
+    updateCountdownDisplay();
+    countdownTimer = setInterval(updateCountdownDisplay, 1000);
+  }
+  function updateCountdownDisplay() {
+    const el = document.getElementById('countdownValue');
+    if (!el || !countdownTarget) return;
+    const diff = countdownTarget - new Date();
+    if (diff <= 0) {
+      clearInterval(countdownTimer);
+      setTimeout(() => loadPrayerTimes(viewDate), 1000);
+      return;
+    }
+    const totalSec = Math.floor(diff / 1000);
+    const hh = Math.floor(totalSec / 3600);
+    const mm = Math.floor((totalSec % 3600) / 60);
+    const ss = totalSec % 60;
+    el.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  }
+
+  // ---------- Render ----------
+  function render() {
+    if (!prayerData) return;
+    clearInterval(countdownTimer);
+
+    const viewingToday = isSameDay(viewDate, new Date());
+
+    // Weekday name (follows the ckb/ar language toggle)
+    document.getElementById('weekdayLabel').textContent = t(`prayer_weekday_${viewDate.getDay()}`);
+    document.getElementById('todayBtn').style.display = viewingToday ? 'none' : 'inline-flex';
+
+    // Hijri date — always shown in Arabic, regardless of interface language
+    const hijri = prayerData.date.hijri;
+    const hijriSuffix = I18N.ar.prayer_hijri_suffix; // "هـ"
+    document.getElementById('hijriLabel').textContent = `${hijri.day} ${hijri.month.ar} ${hijri.year} ${hijriSuffix}`;
+
+    // Gregorian date — shown below the Hijri line, follows the ckb/ar language toggle
+    const gregorian = prayerData.date.gregorian;
+    document.getElementById('gregorianLabel').textContent = `${gregorian.date} ${t('prayer_gregorian_suffix')}`;
+
+    document.getElementById('previewNote').style.display = viewingToday ? 'none' : '';
+
+    // Next-prayer countdown (only meaningful when viewing today)
+    const countdownWrap = document.getElementById('countdownWrap');
+    let nextKey = null;
+    if (viewingToday) {
+      countdownWrap.style.display = '';
+      const next = computeNextPrayerTarget();
+      if (next) {
+        nextKey = next.key;
+        document.getElementById('countdownPrayerName').textContent = t(PRAYER_LABEL_KEYS[next.key]);
+        startCountdown(next.target);
+      } else {
+        document.getElementById('countdownValue').textContent = '--:--:--';
+        resolveTomorrowFajrCountdown();
+      }
+    } else {
+      countdownWrap.style.display = 'none';
+    }
+
+    // Original/adjusted toggle button + note
+    document.getElementById('toggleOriginalBtn').textContent = showOriginal ? t('prayer_show_adjusted') : t('prayer_show_original');
+    document.getElementById('adjustedNote').textContent = showOriginal ? t('prayer_original_note') : t('prayer_adjusted_note');
+
+    // Prayer list
+    document.getElementById('prayerList').innerHTML = PRAYER_ORDER.map((key) => {
+      const isNext = key === nextKey;
+      return `
+      <div class="prayer-card ${isNext ? 'next' : ''}">
+        <div class="p-name">
+          <span class="p-icon">${PRAYER_ICONS[key]}</span>
+          <span data-i18n="${PRAYER_LABEL_KEYS[key]}">${t(PRAYER_LABEL_KEYS[key])}</span>
+          ${isNext ? `<span class="next-badge" data-i18n="prayer_next">داهاتوو</span>` : ''}
+        </div>
+        <div class="p-time">${formatTime12(getDisplayTime(key))}</div>
+      </div>`;
+    }).join('');
+
+    applyI18n();
+    document.getElementById('prevDayBtn').setAttribute('aria-label', t('prayer_prev_day'));
+    document.getElementById('nextDayBtn').setAttribute('aria-label', t('prayer_next_day'));
+  }
+
+  loadPrayerTimes(viewDate);
+</script>
+</body>
+</html>

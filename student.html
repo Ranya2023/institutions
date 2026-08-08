@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>پلاتفۆرمی دامەزراوەکان — قوتابی</title>
+<link rel="manifest" href="manifest-student.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4B43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="قوتابی">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand" id="brandBox">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/>
+      <circle cx="20" cy="20" r="3.5" fill="var(--gold)"/>
+    </svg>
+    <span data-i18n="app_title">پلاتفۆرمی دامەزراوەکان</span>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle">
+      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); renderAll();">کوردی</button>
+      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); renderAll();">العربية</button>
+    </div>
+    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
+      <span class="theme-toggle-icon">☾</span>
+    </button>
+    <a class="icon-btn" href="azkar.html" id="azkarLink" title="Azkar" style="text-decoration:none">📿</a>
+    <a class="icon-btn" href="prayer-times.html" id="prayerLink" title="Prayer times" style="text-decoration:none">🕌</a>
+    <a class="icon-btn" href="quran.html" title="Quran" style="text-decoration:none">📖</a>
+    <button class="icon-btn" id="logoutBtn" style="display:none">⏻</button>
+  </div>
+</div>
+
+<div class="page" id="deniedView" style="display:none">
+  <div class="hero-card"><p style="text-align:center" data-i18n="access_denied">دەسەڵاتت نییە بۆ ئەم بەشە</p></div>
+</div>
+
+<div class="page wide" id="appView" style="display:none">
+  <div class="hero-card" style="margin-top:0; padding:20px 22px">
+    <div style="display:flex; align-items:center; gap:14px">
+      <div class="avatar" style="width:52px; height:52px; font-size:20px" id="studentAvatar"></div>
+      <div>
+        <h1 style="font-size:19px" id="studentName"></h1>
+        <p class="sub" id="studentMeta" style="margin-top:2px"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="appPromo"></div>
+
+  <div class="nav-grid" id="navTabs">
+    <button class="nav-grid-item active" data-view="overview"><span class="nav-icon">📊</span><span data-i18n="nav_overview">گشتی</span></button>
+    <button class="nav-grid-item" data-view="assessments"><span class="nav-icon">⭐</span><span data-i18n="nav_assessments">هەڵسەنگاندن</span></button>
+    <button class="nav-grid-item" data-view="attendance"><span class="nav-icon">✅</span><span data-i18n="nav_attendance">ئامادەبوون</span></button>
+    <button class="nav-grid-item" data-view="notifications"><span class="nav-icon">🔔</span><span data-i18n="nav_notifications">ئاگادارکردنەوەکان</span></button>
+  </div>
+
+  <!-- Overview -->
+  <div class="view" id="view-overview">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="statMonthCount">–</div><div class="label" data-i18n="stat_today_assessments">هەڵسەنگاندنی ئەمڕۆ</div></div>
+      <div class="stat-card"><div class="num" id="statExcellent">–</div><div class="label" data-i18n="stat_excellent_month">نایاب ئەم مانگە</div></div>
+      <div class="stat-card"><div class="num" id="statPresent">–</div><div class="label" data-i18n="att_present">ئامادە</div></div>
+    </div>
+    <button class="btn-add" style="width:100%; margin-bottom:10px" onclick="switchView('assessments')" data-i18n="nav_assessments">هەڵسەنگاندن</button>
+    <div id="quranContinueCard"></div>
+  </div>
+
+  <!-- Assessments -->
+  <div class="view" id="view-assessments" style="display:none">
+    <div class="section-heading"><h2 data-i18n="nav_assessments">هەڵسەنگاندن</h2></div>
+    <div class="filter-row"><select id="assessTypeFilter" onchange="renderAssessments()"></select></div>
+    <div id="assessmentsList"></div>
+  </div>
+
+  <!-- Attendance -->
+  <div class="view" id="view-attendance" style="display:none">
+    <div class="section-heading"><h2 data-i18n="nav_attendance">ئامادەبوون</h2></div>
+    <div class="filter-row">
+      <input type="month" id="attMonthFilter" onchange="renderAttendance()" style="flex:1">
+      <input type="date" id="attDayFilter" onchange="renderAttendance()" style="flex:1">
+    </div>
+    <div class="filter-row">
+      <select id="attSubjectFilter" onchange="renderAttendance()"></select>
+      <button class="btn-outline" id="attDayClearBtn" onclick="document.getElementById('attDayFilter').value='';renderAttendance()" data-i18n="btn_clear_day" style="display:none">لابردنی ڕۆژ</button>
+    </div>
+    <div class="stat-grid" id="attSummary"></div>
+    <div id="attendanceList"></div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="view" id="view-notifications" style="display:none">
+    <div class="section-heading"><h2 data-i18n="nav_notifications">ئاگادارکردنەوەکان</h2></div>
+    <div id="notificationsList"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/ui-helpers.js"></script>
+<script src="js/pwa-install.js"></script>
+<script>
+let currentProfile = null;
+let currentInstitution = null;
+let myStudent = null;
+let stagesCache = [];
+let groupsCache = [];
+let typesCache = [];
+const LEVELS = [
+  { key: 'excellent' }, { key: 'good' }, { key: 'fine' }, { key: 'bad' }, { key: 'very_bad' },
+];
+
+const deniedView = document.getElementById('deniedView');
+const appView = document.getElementById('appView');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function showShell(view) {
+  deniedView.style.display = view === 'denied' ? 'block' : 'none';
+  appView.style.display = view === 'app' ? 'block' : 'none';
+  logoutBtn.style.display = view === 'app' ? 'flex' : 'none';
+}
+
+function goToLogin() {
+  const slug = localStorage.getItem('inst_slug');
+  window.location.href = slug ? `login.html?inst=${slug}` : 'login.html';
+}
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return goToLogin();
+  const { data: profile, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (error || !profile || profile.role !== 'student' || !profile.is_active) return showShell('denied');
+  currentProfile = profile;
+  const { data: student } = await sb.from('students').select('*').eq('profile_id', profile.id).single();
+  myStudent = student;
+  const { data: inst } = await sb.from('institutions').select('*').eq('id', profile.institution_id).single();
+  currentInstitution = inst;
+  showShell('app');
+  const notifUnread = await loadAllData();
+  renderBrand();
+  switchView('overview');
+  initPWA('appPromo', profile.id);
+  announceUnread(notifUnread);
+}
+
+logoutBtn.addEventListener('click', async () => { await sb.auth.signOut(); goToLogin(); });
+
+function renderBrand() {
+  applyInstitutionBranding(currentInstitution);
+  document.getElementById('brandBox').innerHTML = `
+    ${currentInstitution.logo_url
+      ? `<img class="inst-logo" src="${currentInstitution.logo_url}" alt="">`
+      : `<svg class="mark" viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/><circle cx="20" cy="20" r="3.5" fill="var(--gold)"/></svg>`}
+    <span>${escapeHtml(currentInstitution.name)}</span>`;
+  const stage = stagesCache.find((s) => s.id === myStudent.stage_id);
+  const group = groupsCache.find((g) => g.id === myStudent.group_id);
+  document.getElementById('studentAvatar').textContent = initials(currentProfile.full_name);
+  document.getElementById('studentName').textContent = currentProfile.full_name;
+  document.getElementById('studentMeta').textContent = `${stage ? stage.name : ''}${group ? ' · ' + group.name : ''}`;
+  const azkarLink = document.getElementById('azkarLink');
+  if (azkarLink) azkarLink.href = `azkar.html?inst=${currentInstitution.slug}&role=student`;
+}
+
+function switchView(name) {
+  document.querySelectorAll('.view').forEach((v) => v.style.display = 'none');
+  document.getElementById('view-' + name).style.display = 'block';
+  document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => tb.classList.toggle('active', tb.dataset.view === name));
+}
+document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => tb.addEventListener('click', () => switchView(tb.dataset.view)));
+
+function renderAll() {
+  renderBrand();
+  renderOverview();
+  renderAssessments();
+  renderAttendance();
+  renderNotifications();
+}
+
+async function loadAllData() {
+  const [{ data: stages }, { data: groups }, { data: types }] = await Promise.all([
+    sb.from('stages').select('*'),
+    sb.from('groups').select('*'),
+    sb.from('assessment_types').select('*'),
+  ]);
+  stagesCache = stages || [];
+  groupsCache = groups || [];
+  typesCache = types || [];
+  document.getElementById('assessTypeFilter').innerHTML = `<option value="">${t('filter_all_types')}</option>` +
+    typesCache.map((ty) => `<option value="${ty.id}">${escapeHtml(ty.name)}</option>`).join('');
+  document.getElementById('attMonthFilter').value = new Date().toISOString().slice(0, 7);
+  const [, , , notifUnread] = await Promise.all([renderOverview(), renderAssessments(), renderAttendance(), renderNotifications()]);
+  return notifUnread || 0;
+}
+
+// ---------- Overview ----------
+async function renderOverview() {
+  renderQuranContinueCard('quranContinueCard');
+  const monthStart = new Date().toISOString().slice(0, 7) + '-01';
+  const { data: monthAssessments } = await sb.from('assessments').select('level')
+    .eq('student_profile_id', currentProfile.id).gte('assessment_date', monthStart);
+  document.getElementById('statMonthCount').textContent = (monthAssessments || []).length;
+  document.getElementById('statExcellent').textContent = (monthAssessments || []).filter((a) => a.level === 'excellent').length;
+  const { count: presentCount } = await sb.from('attendance').select('*', { count: 'exact', head: true })
+    .eq('student_profile_id', currentProfile.id).eq('status', 'present').gte('attendance_date', monthStart);
+  document.getElementById('statPresent').textContent = presentCount ?? 0;
+}
+
+// ---------- Assessments ----------
+async function renderAssessments() {
+  const typeFilter = document.getElementById('assessTypeFilter').value;
+  let query = sb.from('assessments').select('*').eq('student_profile_id', currentProfile.id)
+    .order('assessment_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+  if (typeFilter) query = query.eq('assessment_type_id', typeFilter);
+  const { data } = await query;
+
+  const list = document.getElementById('assessmentsList');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_assessments')}</div>`;
+    return;
+  }
+
+  const typeMap = Object.fromEntries(typesCache.map((ty) => [ty.id, ty]));
+  list.innerHTML = data.map((a) => {
+    const ty = typeMap[a.assessment_type_id];
+    const detailBits = ty ? (ty.fields || []).map((f) => a.details && a.details[f.key] ? `${getLang() === 'ar' ? (f.label_ar || f.label_ckb) : (f.label_ckb || f.label_ar)}: ${a.details[f.key]}` : null).filter(Boolean).join(' · ') : '';
+    return `
+    <div class="list-item">
+      <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:${levelColor(a.level)};color:#fff">${levelIcon(a.level)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(ty ? ty.name : '')} · <span style="color:${levelColor(a.level)}">${t('level_' + a.level)}</span></div>
+        <div class="meta">${escapeHtml(detailBits)}${a.remarks ? (detailBits ? ' · ' : '') + escapeHtml(a.remarks) : ''}</div>
+        <div class="meta" style="margin-top:2px">${a.assessment_date}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- Attendance ----------
+let attSubjectOptionsLoaded = false;
+async function fillAttSubjectFilter() {
+  if (attSubjectOptionsLoaded) return;
+  const { data } = await sb.from('attendance').select('subject').eq('student_profile_id', currentProfile.id);
+  const subjects = [...new Set((data || []).map((r) => r.subject).filter(Boolean))];
+  const el = document.getElementById('attSubjectFilter');
+  const currentValue = el.value;
+  el.innerHTML = `<option value="">${t('filter_all_subjects')}</option>` +
+    subjects.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  el.value = currentValue;
+  attSubjectOptionsLoaded = true;
+}
+
+async function renderAttendance() {
+  await fillAttSubjectFilter();
+  const dayFilter = document.getElementById('attDayFilter').value;
+  const subjectFilter = document.getElementById('attSubjectFilter').value;
+  document.getElementById('attDayClearBtn').style.display = dayFilter ? '' : 'none';
+
+  let query = sb.from('attendance').select('*').eq('student_profile_id', currentProfile.id);
+  if (dayFilter) {
+    query = query.eq('attendance_date', dayFilter);
+  } else {
+    const month = document.getElementById('attMonthFilter').value || new Date().toISOString().slice(0, 7);
+    const monthStart = month + '-01';
+    const nextMonth = new Date(month + '-01');
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const monthEnd = nextMonth.toISOString().slice(0, 10);
+    query = query.gte('attendance_date', monthStart).lt('attendance_date', monthEnd);
+  }
+  if (subjectFilter) query = query.eq('subject', subjectFilter);
+  const { data } = await query.order('attendance_date', { ascending: false });
+
+  const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+  (data || []).forEach((r) => { counts[r.status] = (counts[r.status] || 0) + 1; });
+  document.getElementById('attSummary').innerHTML = `
+    <div class="stat-card"><div class="num">${counts.present}</div><div class="label">${t('att_present')}</div></div>
+    <div class="stat-card"><div class="num">${counts.absent}</div><div class="label">${t('att_absent')}</div></div>
+    <div class="stat-card"><div class="num">${counts.late}</div><div class="label">${t('att_late')}</div></div>
+    <div class="stat-card"><div class="num">${counts.excused}</div><div class="label">${t('att_excused')}</div></div>
+  `;
+
+  const list = document.getElementById('attendanceList');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_attendance')}</div>`;
+    return;
+  }
+  const attColors = { present: '#3F7D5C', absent: '#A6473A', late: '#B08D3E', excused: '#6B7A8F' };
+  list.innerHTML = data.map((r) => `
+    <div class="list-item">
+      <div class="avatar" style="background:${attColors[r.status]}22; color:${attColors[r.status]}">●</div>
+      <div class="info">
+        <div class="name">${t('att_' + r.status)} · ${escapeHtml(r.subject)}</div>
+        <div class="meta">${r.attendance_date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---------- Notifications ----------
+async function renderNotifications() {
+  const [{ data: notifData }, { data: noteData }] = await Promise.all([
+    sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(50),
+    sb.from('notes').select('*').eq('to_student', true).eq('student_profile_id', currentProfile.id).order('created_at', { ascending: false }).limit(50),
+  ]);
+  const relevantNotifs = (notifData || []).filter((n) =>
+    n.target === 'all' || n.target === 'students' ||
+    (n.target === 'stage' && n.target_stage_id === myStudent.stage_id) ||
+    (n.target === 'group' && n.target_group_id === myStudent.group_id)
+  ).map((n) => ({ kind: 'notification', id: n.id, title: n.title, body: n.body, created_at: n.created_at }));
+  const relevantNotes = (noteData || []).map((n) => ({ kind: 'note', id: n.id, title: t('msg_from_teacher'), body: n.message, created_at: n.created_at, is_read: n.is_read }));
+  const combined = [...relevantNotifs, ...relevantNotes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const list = document.getElementById('notificationsList');
+  if (!combined.length) {
+    setTabBadge('[data-view="notifications"]', 0);
+    list.innerHTML = `<div class="empty-state">${t('empty_notifications')}</div>`;
+    return 0;
+  }
+
+  const { data: reads } = await sb.from('notification_reads').select('notification_id').eq('profile_id', currentProfile.id);
+  const readIds = new Set((reads || []).map((r) => r.notification_id));
+  const isItemUnread = (item) => item.kind === 'notification' ? !readIds.has(item.id) : !item.is_read;
+  const unreadCount = combined.filter(isItemUnread).length;
+  setTabBadge('[data-view="notifications"]', unreadCount);
+
+  list.innerHTML = combined.map((item) => {
+    const isUnread = isItemUnread(item);
+    const clickHandler = item.kind === 'notification' ? `markNotificationRead('${item.id}')` : `markAnnouncementRead('${item.id}')`;
+    return `
+    <div class="list-item ${isUnread ? 'unread' : ''}" ${isUnread ? `style="cursor:pointer" onclick="${clickHandler}"` : ''}>
+      <div class="avatar">${item.kind === 'notification' ? '🔔' : '✉'}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(item.title)}${isUnread ? '<span class="unread-dot"></span>' : ''}</div>
+        <div class="meta">${escapeHtml(item.body)}</div>
+      </div>
+    </div>
+    `;
+  }).join('');
+  return unreadCount;
+}
+
+async function markAnnouncementRead(noteId) {
+  await sb.from('notes').update({ is_read: true }).eq('id', noteId);
+  renderNotifications();
+}
+
+async function markNotificationRead(notificationId) {
+  await sb.from('notification_reads').upsert(
+    { notification_id: notificationId, profile_id: currentProfile.id },
+    { onConflict: 'notification_id,profile_id' }
+  );
+  renderNotifications();
+}
+
+checkSession();
+</script>
+</body>
+</html>

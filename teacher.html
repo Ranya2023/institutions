@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>پلاتفۆرمی دامەزراوەکان — مامۆستا</title>
+<link rel="manifest" href="manifest-teacher.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4B43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="مامۆستا">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand" id="brandBox">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/>
+      <circle cx="20" cy="20" r="3.5" fill="var(--gold)"/>
+    </svg>
+    <span data-i18n="app_title">پلاتفۆرمی دامەزراوەکان</span>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle">
+      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); renderAll();">کوردی</button>
+      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); renderAll();">العربية</button>
+    </div>
+    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
+      <span class="theme-toggle-icon">☾</span>
+    </button>
+    <a class="icon-btn" href="azkar.html" id="azkarLink" title="Azkar" style="text-decoration:none">📿</a>
+    <a class="icon-btn" href="prayer-times.html" id="prayerLink" title="Prayer times" style="text-decoration:none">🕌</a>
+    <a class="icon-btn" href="quran.html" title="Quran" style="text-decoration:none">📖</a>
+    <button class="icon-btn" id="logoutBtn" style="display:none">⏻</button>
+  </div>
+</div>
+
+<!-- DENIED -->
+<div class="page" id="deniedView" style="display:none">
+  <div class="hero-card"><p style="text-align:center" data-i18n="access_denied">دەسەڵاتت نییە بۆ ئەم بەشە</p></div>
+</div>
+
+<!-- APP -->
+<div class="page wide" id="appView" style="display:none">
+  <div class="hero-card" style="margin-top:0; padding:20px 22px">
+    <p class="sub" data-i18n="overview_welcome" style="margin-bottom:2px">بەخێربێیت</p>
+    <h1 id="teacherName" style="font-size:20px"></h1>
+    <p class="sub" id="todayLabel" style="margin-top:6px"></p>
+  </div>
+
+  <div id="appPromo"></div>
+
+  <div class="nav-grid" id="navTabs">
+    <button class="nav-grid-item active" data-view="overview"><span class="nav-icon">📊</span><span data-i18n="nav_overview">گشتی</span></button>
+    <button class="nav-grid-item" data-view="students"><span class="nav-icon">🎓</span><span data-i18n="nav_students">قوتابیان</span></button>
+    <button class="nav-grid-item" data-view="history"><span class="nav-icon">📋</span><span data-i18n="nav_history">تۆماتەکان</span></button>
+    <button class="nav-grid-item" data-view="notifications"><span class="nav-icon">🔔</span><span data-i18n="nav_notifications">ئاگادارکردنەوەکان</span></button>
+    <button class="nav-grid-item" data-view="notes"><span class="nav-icon">✉️</span><span data-i18n="nav_notes">تێبینییەکان</span></button>
+    <button class="nav-grid-item" data-view="azkar-teacher"><span class="nav-icon">📿</span><span data-i18n="azkar_page_heading">ئەزکار</span></button>
+  </div>
+
+  <!-- Overview -->
+  <div class="view" id="view-overview">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="statToday">–</div><div class="label" data-i18n="stat_today_assessments">هەڵسەنگاندنی ئەمڕۆ</div></div>
+      <div class="stat-card"><div class="num" id="statStudentsTotal">–</div><div class="label" data-i18n="stat_students_total">کۆی قوتابیان</div></div>
+    </div>
+    <button class="btn-add" style="width:100%" onclick="switchView('students')" data-i18n="students_heading">لیستی قوتابیان</button>
+    <div id="quranContinueCard"></div>
+  </div>
+
+  <!-- Students -->
+  <div class="view" id="view-students" style="display:none">
+    <div class="section-heading"><h2 data-i18n="students_heading">لیستی قوتابیان</h2></div>
+    <div class="filter-row">
+      <select id="studentStageFilter" onchange="renderStudents()"></select>
+    </div>
+    <div id="studentsList"></div>
+  </div>
+
+  <!-- History -->
+  <div class="view" id="view-history" style="display:none">
+    <div class="section-heading"><h2 data-i18n="history_heading">تۆماتەکانی هەڵسەنگاندن</h2></div>
+    <div class="filter-row">
+      <input type="date" id="historyDateFilter" onchange="renderHistory()" style="flex:1">
+      <select id="historyStudentFilter" onchange="renderHistory()"></select>
+    </div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="view" id="view-notifications" style="display:none">
+    <div class="section-heading"><h2 data-i18n="nav_notifications">ئاگادارکردنەوەکان</h2></div>
+    <div id="teacherNotificationsList"></div>
+  </div>
+
+  <!-- Notes -->
+  <div class="view" id="view-notes" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="notes_heading">تێبینییەکان</h2>
+      <button class="btn-add" onclick="openNoteModal()" data-i18n="action_send_note">ناردنی تێبینی</button>
+    </div>
+    <div class="tabs" id="notesSubTabs">
+      <button class="tab active" data-mode="sent" data-i18n="notes_sent">نێردراو</button>
+      <button class="tab" data-mode="received" data-i18n="notes_received">وەرگیراو</button>
+    </div>
+    <div id="notesList"></div>
+  </div>
+
+  <!-- Azkar (stage-scoped items + student progress) -->
+  <div class="view" id="view-azkar-teacher" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="azkar_page_heading">ئەزکار</h2>
+      <button class="btn-add" onclick="openTeacherAzkarModal()" data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</button>
+    </div>
+    <div id="teacherAzkarList"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/ui-helpers.js"></script>
+<script src="js/pwa-install.js"></script>
+<script>
+// ============================================================
+// State
+// ============================================================
+let currentProfile = null;
+let currentInstitution = null;
+let stagesCache = [];
+let groupsCache = [];
+let studentsCache = [];
+let typesCache = [];
+let myStageIds = []; // stages this teacher is restricted to; empty = sees everyone
+let mySubject = 'general'; // this teacher's subject — tags every attendance record they mark
+
+const LEVELS = [
+  { key: 'excellent', icon: '★★★★★' },
+  { key: 'good', icon: '★★★★' },
+  { key: 'fine', icon: '★★★' },
+  { key: 'bad', icon: '★★' },
+  { key: 'very_bad', icon: '★' },
+];
+
+const deniedView = document.getElementById('deniedView');
+const appView = document.getElementById('appView');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function showShell(view) {
+  deniedView.style.display = view === 'denied' ? 'block' : 'none';
+  appView.style.display = view === 'app' ? 'block' : 'none';
+  logoutBtn.style.display = view === 'app' ? 'flex' : 'none';
+}
+
+// ============================================================
+// Session
+// ============================================================
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return goToLogin();
+  const { data: profile, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (error || !profile || profile.role !== 'teacher' || !profile.is_active) return showShell('denied');
+  currentProfile = profile;
+  const { data: inst } = await sb.from('institutions').select('*').eq('id', profile.institution_id).single();
+  currentInstitution = inst;
+  showShell('app');
+  renderBrand();
+  document.getElementById('teacherName').textContent = profile.full_name;
+  document.getElementById('todayLabel').textContent = formatDateLabel();
+  initPWA('appPromo', profile.id);
+  const unreadTotal = await loadAllData();
+  switchView('overview');
+  announceUnread(unreadTotal);
+}
+
+function goToLogin() {
+  const slug = localStorage.getItem('inst_slug');
+  window.location.href = slug ? `login.html?inst=${slug}` : 'login.html';
+}
+
+logoutBtn.addEventListener('click', async () => {
+  await sb.auth.signOut();
+  goToLogin();
+});
+
+function renderBrand() {
+  applyInstitutionBranding(currentInstitution);
+  const box = document.getElementById('brandBox');
+  box.innerHTML = `
+    ${currentInstitution.logo_url
+      ? `<img class="inst-logo" src="${currentInstitution.logo_url}" alt="">`
+      : `<svg class="mark" viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/><circle cx="20" cy="20" r="3.5" fill="var(--gold)"/></svg>`}
+    <span>${escapeHtml(currentInstitution.name)}</span>`;
+  const azkarLink = document.getElementById('azkarLink');
+  if (azkarLink) azkarLink.href = `azkar.html?inst=${currentInstitution.slug}&role=teacher`;
+}
+
+// ============================================================
+// View switching
+// ============================================================
+function switchView(name) {
+  document.querySelectorAll('.view').forEach((v) => v.style.display = 'none');
+  document.getElementById('view-' + name).style.display = 'block';
+  document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => tb.classList.toggle('active', tb.dataset.view === name));
+}
+document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => {
+  tb.addEventListener('click', () => switchView(tb.dataset.view));
+});
+
+function renderAll() {
+  document.getElementById('todayLabel').textContent = formatDateLabel();
+  renderOverview();
+  renderStudents();
+  renderHistory();
+  renderNotes();
+  renderTeacherAzkar();
+  renderNotificationsTeacher();
+}
+
+// ============================================================
+// Data loading
+// ============================================================
+async function loadAllData() {
+  const [{ data: stages }, { data: groups }, { data: types }, { data: myStages }, { data: myTeacherRow }] = await Promise.all([
+    sb.from('stages').select('*').order('order_index'),
+    sb.from('groups').select('*').order('name'),
+    sb.from('assessment_types').select('*').order('created_at'),
+    sb.from('teacher_stages').select('stage_id').eq('teacher_profile_id', currentProfile.id),
+    sb.from('teachers').select('subject').eq('profile_id', currentProfile.id).maybeSingle(),
+  ]);
+  stagesCache = stages || [];
+  groupsCache = groups || [];
+  typesCache = types || [];
+  myStageIds = (myStages || []).map((r) => r.stage_id);
+  mySubject = (myTeacherRow && myTeacherRow.subject) || 'general';
+
+  await renderStudents();
+  await renderOverview();
+  renderHistoryFilters();
+  await renderHistory();
+  await renderNotes();
+  await renderTeacherAzkar();
+  const notifUnread = await renderNotificationsTeacher();
+  const { count: noteUnread } = await sb.from('notes').select('*', { count: 'exact', head: true })
+    .eq('to_profile_id', currentProfile.id).eq('is_read', false);
+  return (notifUnread || 0) + (noteUnread || 0);
+}
+
+// ---------- Overview ----------
+async function renderOverview() {
+  renderQuranContinueCard('quranContinueCard');
+  const { count: ac } = await sb.from('assessments').select('*', { count: 'exact', head: true })
+    .eq('teacher_profile_id', currentProfile.id).eq('assessment_date', todayISO());
+  document.getElementById('statToday').textContent = ac ?? 0;
+  document.getElementById('statStudentsTotal').textContent = studentsCache.length;
+}
+
+// ---------- Students ----------
+function fillStageFilter(selectEl) {
+  const currentValue = selectEl.value;
+  const visibleStages = myStageIds.length ? stagesCache.filter((s) => myStageIds.includes(s.id)) : stagesCache;
+  selectEl.innerHTML = `<option value="">${t('filter_all_stages')}</option>` +
+    visibleStages.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  selectEl.value = currentValue;
+}
+
+async function renderStudents() {
+  const filterEl = document.getElementById('studentStageFilter');
+  fillStageFilter(filterEl);
+
+  const { data } = await sb.from('students').select('profile_id, stage_id, group_id, profiles(full_name, is_active)').order('code');
+  let all = (data || []).filter((s) => s.profiles && s.profiles.is_active);
+  if (myStageIds.length) all = all.filter((s) => myStageIds.includes(s.stage_id));
+  studentsCache = all;
+
+  const filterVal = filterEl.value;
+  const filtered = filterVal ? studentsCache.filter((s) => s.stage_id === filterVal) : studentsCache;
+
+  const list = document.getElementById('studentsList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_students')}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((st) => {
+    const stage = stagesCache.find((s) => s.id === st.stage_id);
+    const group = groupsCache.find((g) => g.id === st.group_id);
+    const safeName = escapeHtml(st.profiles.full_name).replace(/'/g, "\\'");
+    return `
+    <div class="list-item">
+      <div class="avatar">${initials(st.profiles.full_name)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(st.profiles.full_name)}</div>
+        <div class="meta">${stage ? escapeHtml(stage.name) : ''}${group ? ' · ' + escapeHtml(group.name) : ''}</div>
+      </div>
+      <div class="actions">
+        <button class="icon-sm-btn" onclick="openAssessmentModal('${st.profile_id}','${safeName}')" title="${t('action_add_assessment')}">📝</button>
+        <button class="icon-sm-btn" onclick="openAttendanceModal('${st.profile_id}','${safeName}')" title="${t('action_mark_attendance')}">📅</button>
+        <button class="icon-sm-btn" onclick="openNoteModal('${st.profile_id}','${safeName}')" title="${t('action_send_note')}">✉</button>
+        <button class="icon-sm-btn" onclick="openStudentAzkarModal('${st.profile_id}','${safeName}',${st.stage_id ? `'${st.stage_id}'` : 'null'})" title="${t('action_view_azkar')}">📿</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Shows one student's Azkar "duty" items (assigned by their stage's
+// teacher) and whether they've completed each one today. Queried fresh
+// (rather than reusing teacherAzkarItems) so it's correct regardless of
+// whether this teacher is restricted to one stage or oversees several —
+// the student's own stage_id is what decides which duty items apply to
+// them, and every student visible here is already within a stage this
+// teacher is permitted to see.
+async function openStudentAzkarModal(studentId, studentName, stageId) {
+  openModal(`<h3 style="font-family:'Amiri',serif">${escapeHtml(studentName)}</h3><p class="sub" style="text-align:center">${t('prayer_loading') || '...'}</p>`);
+
+  if (!stageId) {
+    const st = studentsCache.find((s) => s.profile_id === studentId);
+    stageId = st ? st.stage_id : null;
+  }
+
+  const [{ data: cats }, { data: items }] = await Promise.all([
+    sb.from('azkar_categories').select('*'),
+    sb.from('azkar_items').select('*').order('order_index'),
+  ]);
+  const dutyCategory = (cats || []).find((c) => (c.name || '').includes('ئەرک') || (c.name || '').includes('واجب'));
+  const dutyItems = (items || []).filter((i) =>
+    (!dutyCategory || i.category_id === dutyCategory.id) && (!i.stage_id || i.stage_id === stageId)
+  );
+
+  if (!dutyItems.length) {
+    openModal(`<h3 style="font-family:'Amiri',serif">${escapeHtml(studentName)}</h3><p class="sub" style="text-align:center">${t('azkar_empty')}</p>`);
+    return;
+  }
+
+  const today = todayISO();
+  const itemIds = dutyItems.map((i) => i.id);
+  const { data: progress } = await sb.from('azkar_progress').select('item_id, count, updated_at')
+    .eq('student_profile_id', studentId).eq('progress_date', today).in('item_id', itemIds);
+  const progressMap = Object.fromEntries((progress || []).map((p) => [p.item_id, p.count]));
+  const updatedMap = Object.fromEntries((progress || []).map((p) => [p.item_id, p.updated_at]));
+  // Most recent update across all of today's duty items, for the
+  // at-a-glance "last activity" line next to the date.
+  const lastUpdated = (progress || []).reduce((latest, p) => {
+    if (!p.updated_at) return latest;
+    return (!latest || new Date(p.updated_at) > new Date(latest)) ? p.updated_at : latest;
+  }, null);
+
+  openModal(`
+    <h3 style="font-family:'Amiri',serif">${escapeHtml(studentName)}</h3>
+    <p class="sub" style="margin-bottom:2px">📿 ${t('azkar_page_heading')} · ${formatDateLabel()}</p>
+    <p class="sub" style="margin-bottom:14px; font-size:12px">${lastUpdated ? `🕐 ${t('azkar_last_activity')} ${formatElapsed(lastUpdated)}` : ''}</p>
+    ${dutyItems.map((item) => {
+      const count = progressMap[item.id] || 0;
+      const done = count >= item.target_count;
+      const updatedAt = updatedMap[item.id];
+      return `
+      <div class="list-item">
+        <div class="avatar" style="${done ? 'background:rgba(63,125,92,.15); color:#3F7D5C' : ''}">${done ? '✅' : '📿'}</div>
+        <div class="info">
+          <div class="name" style="font-family:'Amiri',serif; font-size:14px">${escapeHtml(item.arabic_text)}</div>
+          <div class="meta">${done ? t('azkar_done_msg') : `${count} / ${item.target_count}`}${updatedAt ? ` · 🕐 ${formatElapsed(updatedAt)}` : ''}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  `);
+}
+
+// ---------- Assessment ----------
+function openAssessmentModal(studentId, studentName) {
+  if (!typesCache.length) {
+    openModal(`<h3>${escapeHtml(studentName)}</h3><p>${t('empty_types')}</p>`);
+    return;
+  }
+  const typeOptions = typesCache.map((ty) => `<option value="${ty.id}">${escapeHtml(ty.name)}</option>`).join('');
+  openModal(`
+    <h3>${escapeHtml(studentName)}</h3>
+    <form id="assessmentForm">
+      <div class="field">
+        <label data-i18n="field_type_name">ناوی جۆر</label>
+        <select id="assessTypeSelect">${typeOptions}</select>
+      </div>
+      <div id="dynamicFields"></div>
+      <div class="field">
+        <label data-i18n="field_level">ئاست</label>
+        <div class="level-picker" id="levelPicker">
+          ${LEVELS.map((l) => `<button type="button" class="level-btn" data-level="${l.key}">${l.icon}<br>${t('level_' + l.key)}</button>`).join('')}
+        </div>
+      </div>
+      <div class="field"><label data-i18n="field_remarks">تێبینی</label><textarea id="assessRemarks" rows="2"></textarea></div>
+      <button type="submit" class="btn-primary" id="assessSaveBtn" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+
+  let selectedLevel = null;
+  document.querySelectorAll('.level-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.level-btn').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedLevel = btn.dataset.level;
+    });
+  });
+
+  function renderDynamicFields() {
+    const ty = typesCache.find((t2) => t2.id === document.getElementById('assessTypeSelect').value);
+    const container = document.getElementById('dynamicFields');
+    const fields = (ty && ty.fields) || [];
+    const lang = getLang();
+    container.innerHTML = fields.map((f) => `
+      <div class="field">
+        <label>${escapeHtml(lang === 'ar' ? (f.label_ar || f.label_ckb || f.key) : (f.label_ckb || f.label_ar || f.key))}</label>
+        <input type="${f.type === 'number' ? 'number' : 'text'}" data-field-key="${f.key}">
+      </div>
+    `).join('');
+  }
+  renderDynamicFields();
+  document.getElementById('assessTypeSelect').addEventListener('change', renderDynamicFields);
+
+  document.getElementById('assessmentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!selectedLevel) { toast(t('required_field'), 'error'); return; }
+    const btn = document.getElementById('assessSaveBtn');
+    btn.disabled = true;
+    const details = {};
+    document.querySelectorAll('[data-field-key]').forEach((el) => { details[el.dataset.fieldKey] = el.value; });
+    const { error } = await sb.from('assessments').insert({
+      institution_id: currentInstitution.id,
+      student_profile_id: studentId,
+      teacher_profile_id: currentProfile.id,
+      assessment_type_id: document.getElementById('assessTypeSelect').value,
+      details,
+      level: selectedLevel,
+      remarks: document.getElementById('assessRemarks').value || null,
+    });
+    if (error) { toast(t('toast_error'), 'error'); btn.disabled = false; return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderOverview();
+    renderHistory();
+  });
+}
+
+// ---------- Attendance ----------
+function openAttendanceModal(studentId, studentName) {
+  openModal(`
+    <h3>${escapeHtml(studentName)}</h3>
+    <p class="sub" style="margin-bottom:16px">${formatDateLabel()} · ${escapeHtml(mySubject)}</p>
+    <div class="attendance-grid">
+      <button class="att-btn" data-status="present" data-i18n="att_present">ئامادە</button>
+      <button class="att-btn" data-status="absent" data-i18n="att_absent">غیاب</button>
+      <button class="att-btn" data-status="late" data-i18n="att_late">دواکەوتوو</button>
+      <button class="att-btn" data-status="excused" data-i18n="att_excused">مۆڵەت</button>
+    </div>
+  `);
+  document.querySelectorAll('.att-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const { error } = await sb.from('attendance').upsert({
+        institution_id: currentInstitution.id,
+        student_profile_id: studentId,
+        status: btn.dataset.status,
+        subject: mySubject,
+        marked_by: currentProfile.id,
+        attendance_date: todayISO(),
+      }, { onConflict: 'student_profile_id,subject,attendance_date' });
+      if (error) { toast(t('toast_error'), 'error'); return; }
+      closeModal();
+      toast(t('toast_updated'));
+    });
+  });
+}
+
+// ---------- Notes ----------
+function openNoteModal(studentId, studentName) {
+  const studentPicker = studentId
+    ? ''
+    : `<div class="field"><label data-i18n="field_student_name">ناوی قوتابی</label>
+        <select id="noteStudentSelect">
+          ${studentsCache.map((s) => `<option value="${s.profile_id}">${escapeHtml(s.profiles.full_name)}</option>`).join('')}
+        </select>
+      </div>`;
+  openModal(`
+    <h3 data-i18n="action_send_note">ناردنی ئاگادارکردنەوە</h3>
+    ${studentId ? `<p class="sub" style="margin-bottom:14px">${escapeHtml(studentName)}</p>` : studentPicker}
+    <div class="field">
+      <label data-i18n="field_note_to">نێردراو بۆ</label>
+      <select id="noteRecipient">
+        <option value="student" data-i18n="note_to_student">قوتابی</option>
+        <option value="parent" data-i18n="note_to_parent">دایک و باوک</option>
+        <option value="admin" data-i18n="note_to_admin">بەڕێوەبەر</option>
+      </select>
+    </div>
+    <div class="field"><label data-i18n="field_note_message">نامە</label><textarea id="noteMessage" rows="3"></textarea></div>
+    <button class="btn-primary" id="noteSaveBtn" data-i18n="btn_save">پاشەکەوتکردن</button>
+  `);
+  document.getElementById('noteSaveBtn').addEventListener('click', async () => {
+    const targetStudentId = studentId || document.getElementById('noteStudentSelect').value;
+    const message = document.getElementById('noteMessage').value.trim();
+    if (!targetStudentId || !message) { toast(t('required_field'), 'error'); return; }
+    const recipient = document.getElementById('noteRecipient').value;
+    const { error } = await sb.from('notes').insert({
+      institution_id: currentInstitution.id,
+      from_profile_id: currentProfile.id,
+      student_profile_id: targetStudentId,
+      to_admin: recipient === 'admin',
+      to_parent: recipient === 'parent',
+      to_student: recipient === 'student',
+      message,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderNotes();
+  });
+}
+
+let notesMode = 'sent';
+document.querySelectorAll('#notesSubTabs .tab').forEach((tb) => {
+  tb.addEventListener('click', () => {
+    document.querySelectorAll('#notesSubTabs .tab').forEach((b) => b.classList.remove('active'));
+    tb.classList.add('active');
+    notesMode = tb.dataset.mode;
+    renderNotes();
+  });
+});
+
+async function renderNotes() {
+  const query = notesMode === 'sent'
+    ? sb.from('notes').select('*').eq('from_profile_id', currentProfile.id)
+    : sb.from('notes').select('*').eq('to_profile_id', currentProfile.id);
+  const { data: notes } = await query.order('created_at', { ascending: false });
+
+  // Badge always reflects unread RECEIVED notes, regardless of which sub-tab is open.
+  const { count: unreadCount } = await sb.from('notes').select('*', { count: 'exact', head: true })
+    .eq('to_profile_id', currentProfile.id).eq('is_read', false);
+  setTabBadge('[data-view="notes"]', unreadCount ?? 0);
+
+  const list = document.getElementById('notesList');
+  if (!notes || !notes.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_notes')}</div>`;
+    return;
+  }
+
+  const studentIds = [...new Set(notes.map((n) => n.student_profile_id).filter(Boolean))];
+  let nameMap = {};
+  if (studentIds.length) {
+    const { data: profs } = await sb.from('profiles').select('id, full_name').in('id', studentIds);
+    nameMap = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name]));
+  }
+
+  list.innerHTML = notes.map((n) => {
+    const isUnread = notesMode === 'received' && !n.is_read;
+    return `
+    <div class="list-item ${isUnread ? 'unread' : ''}" ${isUnread ? `style="cursor:pointer" onclick="markNoteRead('${n.id}')"` : ''}>
+      <div class="avatar">✉</div>
+      <div class="info">
+        <div class="name">${escapeHtml(nameMap[n.student_profile_id] || '')}${isUnread ? '<span class="unread-dot"></span>' : ''}</div>
+        <div class="meta">
+          ${notesMode === 'sent'
+            ? (n.to_admin ? t('note_to_admin') : t('note_to_parent'))
+            : `<span class="msg-bubble in">${t('msg_from_parent')}</span>`}
+          · ${escapeHtml(n.message)}
+        </div>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+async function markNoteRead(noteId) {
+  await sb.from('notes').update({ is_read: true }).eq('id', noteId);
+  renderNotes();
+}
+
+// ---------- Notifications (received) ----------
+// ---------- Azkar (stage-scoped items + progress) ----------
+let teacherAzkarCategories = [];
+let teacherAzkarItems = [];
+
+// Same keyword-based icon mapping as azkar.html/admin.html, kept local
+// to this page since it has no shared JS include for it.
+function azkarCategoryIcon(name) {
+  const n = name || '';
+  if (n.includes('بەیانی') || n.includes('صباح')) return '☀️';
+  if (n.includes('ئێوارە') || n.includes('مساء')) return '🌙';
+  if (n.includes('ئەرک') || n.includes('واجب')) return '📝';
+  return '📿';
+}
+
+// Teachers only ever add azkar into the "Duty" section (assigned,
+// required azkar for their stage) — the admin owns morning/evening/
+// general content. That section has to already exist (only an admin
+// can create a category), so we look it up by name rather than create it.
+function findDutyAzkarCategory() {
+  return teacherAzkarCategories.find((c) => (c.name || '').includes('ئەرک') || (c.name || '').includes('واجب'));
+}
+
+async function renderTeacherAzkar() {
+  const myStageId = myStageIds[0] || null;
+  const [{ data: cats }, { data: allItems }] = await Promise.all([
+    sb.from('azkar_categories').select('*').order('order_index'),
+    sb.from('azkar_items').select('*').order('order_index'),
+  ]);
+  teacherAzkarCategories = cats || [];
+  teacherAzkarItems = (allItems || []).filter((i) => !i.stage_id || i.stage_id === myStageId);
+
+  const list = document.getElementById('teacherAzkarList');
+  if (!teacherAzkarItems.length) {
+    list.innerHTML = `<div class="empty-state">${t('azkar_empty')}</div>`;
+    return;
+  }
+
+  list.innerHTML = teacherAzkarItems.map((item) => {
+    const cat = teacherAzkarCategories.find((c) => c.id === item.category_id);
+    const catIcon = azkarCategoryIcon(cat ? cat.name : '');
+    return `
+    <div class="list-item" style="cursor:pointer" onclick="openAzkarProgressModal('${item.id}', '${escapeHtml(item.arabic_text).replace(/'/g, "\\'")}', ${item.target_count})">
+      <div class="avatar">${catIcon}</div>
+      <div class="info">
+        <div class="name" style="font-family:'Amiri',serif">${escapeHtml(item.arabic_text)}</div>
+        <div class="meta">${cat ? escapeHtml(cat.name) + ' · ' : ''}${t('field_target_count')}: ${item.target_count}${!item.stage_id ? ' · ' + t('filter_all_stages') : ''}</div>
+      </div>
+      <div class="icon-sm-btn">›</div>
+    </div>
+    `;
+  }).join('');
+}
+
+function openTeacherAzkarModal() {
+  const myStageId = myStageIds[0];
+  if (!myStageId) {
+    openModal(`<h3 data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</h3><p class="sub">${t('azkar_teacher_no_stage')}</p>`);
+    return;
+  }
+  const dutyCategory = findDutyAzkarCategory();
+  if (!dutyCategory) {
+    openModal(`<h3 data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</h3><p class="sub">${t('azkar_teacher_no_duty_category')}</p>`);
+    return;
+  }
+  openModal(`
+    <h3 data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</h3>
+    <p class="sub">${azkarCategoryIcon(dutyCategory.name)} ${escapeHtml(dutyCategory.name)} — ${t('azkar_duty_hint')}</p>
+    <form id="teacherAzkarForm">
+      <div class="field"><label data-i18n="field_arabic_text">دەقی عەرەبی</label><textarea name="arabic_text" rows="2" required></textarea></div>
+      <div class="field"><label data-i18n="field_translit">دەنگنووسین (ئارەزوومەندانە)</label><input type="text" name="translit"></div>
+      <div class="field"><label data-i18n="field_meaning">واتا (ئارەزوومەندانە)</label><input type="text" name="meaning"></div>
+      <div class="field"><label data-i18n="field_target_count">ژمارەی دووبارەکردنەوە</label><input type="number" name="target_count" value="1" min="1" required></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('teacherAzkarForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('azkar_items').insert({
+      institution_id: currentInstitution.id,
+      category_id: dutyCategory.id,
+      stage_id: myStageId,
+      created_by: currentProfile.id,
+      arabic_text: fd.get('arabic_text'),
+      translit: fd.get('translit') || null,
+      meaning: fd.get('meaning') || null,
+      target_count: parseInt(fd.get('target_count'), 10) || 1,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderTeacherAzkar();
+  });
+}
+
+async function openAzkarProgressModal(itemId, itemLabel, target) {
+  const today = todayISO();
+  const { data: progress } = await sb.from('azkar_progress').select('student_profile_id, count, updated_at')
+    .eq('item_id', itemId).eq('progress_date', today);
+  const progressMap = Object.fromEntries((progress || []).map((p) => [p.student_profile_id, p.count]));
+  const updatedMap = Object.fromEntries((progress || []).map((p) => [p.student_profile_id, p.updated_at]));
+
+  openModal(`
+    <h3 style="font-family:'Amiri',serif">${escapeHtml(itemLabel)}</h3>
+    <p class="sub" style="margin-bottom:14px">${formatDateLabel()}</p>
+    ${studentsCache.length ? studentsCache.map((s) => {
+      const count = progressMap[s.profile_id] || 0;
+      const done = count >= target;
+      const updatedAt = updatedMap[s.profile_id];
+      return `
+      <div class="list-item">
+        <div class="avatar" style="${done ? 'background:rgba(63,125,92,.15); color:#3F7D5C' : ''}">${initials(s.profiles.full_name)}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(s.profiles.full_name)}</div>
+          <div class="meta">${done ? '✅ ' + t('azkar_done_msg') : `${count} / ${target}`}${updatedAt ? ` · 🕐 ${formatElapsed(updatedAt)}` : ''}</div>
+        </div>
+      </div>`;
+    }).join('') : `<div class="empty-state">${t('empty_students')}</div>`}
+  `);
+}
+
+async function renderNotificationsTeacher() {
+  const { data } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(50);
+  const relevant = (data || []).filter((n) => n.target === 'all' || n.target === 'teachers');
+  if (!relevant.length) {
+    setTabBadge('[data-view="notifications"]', 0);
+    document.getElementById('teacherNotificationsList').innerHTML = `<div class="empty-state">${t('empty_notifications')}</div>`;
+    return;
+  }
+  const { data: reads } = await sb.from('notification_reads').select('notification_id').eq('profile_id', currentProfile.id);
+  const readIds = new Set((reads || []).map((r) => r.notification_id));
+  const unreadCount = relevant.filter((n) => !readIds.has(n.id)).length;
+  setTabBadge('[data-view="notifications"]', unreadCount);
+  document.getElementById('teacherNotificationsList').innerHTML = relevant.map((n) => {
+    const isUnread = !readIds.has(n.id);
+    return `
+    <div class="list-item ${isUnread ? 'unread' : ''}" ${isUnread ? `style="cursor:pointer" onclick="markNotificationReadTeacher('${n.id}')"` : ''}>
+      <div class="avatar">🔔</div>
+      <div class="info">
+        <div class="name">${escapeHtml(n.title)}${isUnread ? '<span class="unread-dot"></span>' : ''}</div>
+        <div class="meta">${escapeHtml(n.body)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return unreadCount;
+}
+
+async function markNotificationReadTeacher(notificationId) {
+  await sb.from('notification_reads').upsert(
+    { notification_id: notificationId, profile_id: currentProfile.id },
+    { onConflict: 'notification_id,profile_id' }
+  );
+  renderNotificationsTeacher();
+}
+
+// ---------- History ----------
+function renderHistoryFilters() {
+  document.getElementById('historyStudentFilter').innerHTML = `<option value="">${t('filter_all_students')}</option>` +
+    studentsCache.map((s) => `<option value="${s.profile_id}">${escapeHtml(s.profiles.full_name)}</option>`).join('');
+}
+
+async function renderHistory() {
+  let query = sb.from('assessments').select('*').eq('teacher_profile_id', currentProfile.id)
+    .order('assessment_date', { ascending: false }).order('created_at', { ascending: false });
+  const dateVal = document.getElementById('historyDateFilter').value;
+  const studentVal = document.getElementById('historyStudentFilter').value;
+  if (dateVal) query = query.eq('assessment_date', dateVal);
+  if (studentVal) query = query.eq('student_profile_id', studentVal);
+  const { data: assessments } = await query.limit(100);
+
+  const list = document.getElementById('historyList');
+  if (!assessments || !assessments.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_students')}</div>`;
+    return;
+  }
+
+  const studentIds = [...new Set(assessments.map((a) => a.student_profile_id))];
+  const { data: profs } = studentIds.length ? await sb.from('profiles').select('id, full_name').in('id', studentIds) : { data: [] };
+  const nameMap = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name]));
+  const typeMap = Object.fromEntries(typesCache.map((ty) => [ty.id, ty.name]));
+
+  list.innerHTML = assessments.map((a) => `
+    <div class="list-item">
+      <div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;background:${levelColor(a.level)};color:#fff">${levelIcon(a.level)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(nameMap[a.student_profile_id] || '')} · <span style="color:${levelColor(a.level)}">${t('level_' + a.level)}</span></div>
+        <div class="meta">${escapeHtml(typeMap[a.assessment_type_id] || '')} · ${a.assessment_date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+checkSession();
+</script>
+</body>
+</html>

@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>پلاتفۆرمی دامەزراوەکان — بەڕێوەبەر</title>
+<link rel="manifest" href="manifest-admin.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4B43">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="بەڕێوەبەر">
+<link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand" id="brandBox">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/>
+      <circle cx="20" cy="20" r="3.5" fill="var(--gold)"/>
+    </svg>
+    <span data-i18n="app_title">پلاتفۆرمی دامەزراوەکان</span>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle">
+      <button class="lang-pill" data-lang="ckb" onclick="setLang('ckb'); renderAll();">کوردی</button>
+      <button class="lang-pill" data-lang="ar" onclick="setLang('ar'); renderAll();">العربية</button>
+    </div>
+    <button class="icon-btn" onclick="setTheme(getTheme()==='dark'?'light':'dark')">
+      <span class="theme-toggle-icon">☾</span>
+    </button>
+    <a class="icon-btn" href="prayer-times.html" title="Prayer times" style="text-decoration:none">🕌</a>
+    <a class="icon-btn" href="quran.html" title="Quran" style="text-decoration:none">📖</a>
+    <button class="icon-btn" id="logoutBtn" style="display:none">⏻</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page" id="loginView">
+  <div class="hero-card">
+    <svg class="corner-ornament" viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="none" stroke="var(--gold)" stroke-width="1.2">
+        <rect x="20" y="20" width="45" height="45" transform="rotate(45 42.5 42.5)"/>
+        <rect x="20" y="20" width="45" height="45"/>
+      </g>
+      <circle cx="42.5" cy="42.5" r="4" fill="var(--gold)"/>
+    </svg>
+    <h1 data-i18n="admin_login_heading">چوونەژوورەوەی بەڕێوەبەر</h1>
+    <div class="error-box" id="loginError"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label data-i18n="sa_email">ئیمەیل</label>
+        <input type="email" name="email" required>
+      </div>
+      <div class="field">
+        <label data-i18n="sa_password">وشەی نهێنی</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-primary" id="loginBtn" data-i18n="sa_login_btn">چوونەژوورەوە</button>
+    </form>
+  </div>
+</div>
+
+<!-- STATUS (pending / rejected / suspended) -->
+<div class="page" id="statusView" style="display:none">
+  <div class="hero-card">
+    <div class="success-box">
+      <div class="badge" id="statusBadge">…</div>
+      <h2 id="statusHeading"></h2>
+      <p id="statusBody"></p>
+    </div>
+  </div>
+</div>
+
+<!-- DENIED -->
+<div class="page" id="deniedView" style="display:none">
+  <div class="hero-card"><p style="text-align:center" data-i18n="access_denied">دەسەڵاتت نییە بۆ ئەم بەشە</p></div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page wide" id="dashboardView" style="display:none">
+  <div id="appPromo"></div>
+
+  <div class="nav-grid" id="navTabs">
+    <button class="nav-grid-item active" data-view="overview"><span class="nav-icon">📊</span><span data-i18n="nav_overview">گشتی</span></button>
+    <button class="nav-grid-item" data-view="syllabus"><span class="nav-icon">📘</span><span data-i18n="nav_syllabus">وانەکان</span></button>
+    <button class="nav-grid-item" data-view="stages"><span class="nav-icon">🏫</span><span data-i18n="nav_stages">قۆناغ و گروپ</span></button>
+    <button class="nav-grid-item" data-view="teachers"><span class="nav-icon">👨‍🏫</span><span data-i18n="nav_teachers">مامۆستایان</span></button>
+    <button class="nav-grid-item" data-view="students"><span class="nav-icon">🎓</span><span data-i18n="nav_students">قوتابیان</span></button>
+    <button class="nav-grid-item" data-view="assessments"><span class="nav-icon">⭐</span><span data-i18n="nav_assessments">هەڵسەنگاندن</span></button>
+    <button class="nav-grid-item" data-view="attendance"><span class="nav-icon">✅</span><span data-i18n="nav_attendance">ئامادەبوون</span></button>
+    <button class="nav-grid-item" data-view="notifications"><span class="nav-icon">🔔</span><span data-i18n="nav_notifications">ئاگادارکردنەوەکان</span></button>
+    <button class="nav-grid-item" data-view="admin-notes"><span class="nav-icon">✉️</span><span data-i18n="nav_notes_received">تێبینییەکان</span></button>
+    <button class="nav-grid-item" data-view="azkar-admin"><span class="nav-icon">📿</span><span data-i18n="azkar_page_heading">ئەزکار</span></button>
+    <button class="nav-grid-item" data-view="settings"><span class="nav-icon">⚙️</span><span data-i18n="nav_settings">ڕێکخستنەکان</span></button>
+  </div>
+
+  <!-- Overview -->
+  <div class="view" id="view-overview">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="statTeachers">–</div><div class="label" data-i18n="stat_teachers">کۆی مامۆستایان</div></div>
+      <div class="stat-card"><div class="num" id="statStudents">–</div><div class="label" data-i18n="stat_students">کۆی قوتابیان</div></div>
+      <div class="stat-card"><div class="num" id="statToday">–</div><div class="label" data-i18n="stat_today_assessments">هەڵسەنگاندنی ئەمڕۆ</div></div>
+    </div>
+  </div>
+
+  <!-- Teachers -->
+  <div class="view" id="view-teachers" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="teachers_heading">لیستی مامۆستایان</h2>
+      <button class="btn-add" onclick="openTeacherModal()" data-i18n="btn_add_teacher">زیادکردنی مامۆستا</button>
+    </div>
+    <div id="teachersList"></div>
+  </div>
+
+  <!-- Teacher Detail (drill-down: their submissions) -->
+  <div class="view" id="view-teacher-detail" style="display:none">
+    <div class="section-heading">
+      <div style="display:flex; align-items:center; gap:10px">
+        <button class="icon-btn" onclick="switchView('teachers')">←</button>
+        <div>
+          <h2 id="teacherDetailName" style="font-size:17px"></h2>
+          <p class="sub" data-i18n="history_heading" style="font-size:12px">تۆماتەکانی هەڵسەنگاندن</p>
+        </div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <input type="date" id="teacherDetailDateFilter" onchange="renderTeacherDetailAssessments()" style="flex:1">
+      <select id="teacherDetailStudentFilter" onchange="renderTeacherDetailAssessments()"></select>
+    </div>
+    <div id="teacherDetailList"></div>
+  </div>
+
+  <!-- Students -->
+  <div class="view" id="view-students" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="students_heading">لیستی قوتابیان</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn-outline" onclick="exportStudentsWord()" data-i18n="btn_export_word">داگرتن وەک Word</button>
+        <button class="btn-add" onclick="openStudentModal()" data-i18n="btn_add_student">زیادکردنی قوتابی</button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <select id="studentStageFilter" onchange="renderStudents()"></select>
+    </div>
+    <div id="studentsList"></div>
+  </div>
+
+
+  <!-- Stages & Groups -->
+  <div class="view" id="view-stages" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="stages_heading">قۆناغ و گروپەکان</h2>
+      <button class="btn-add" onclick="openStageModal()" data-i18n="btn_add_stage">زیادکردنی قۆناغ</button>
+    </div>
+    <div id="stagesList"></div>
+  </div>
+
+  <!-- Syllabus -->
+  <div class="view" id="view-syllabus" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="syllabus_heading">وانەکان</h2>
+      <button class="btn-add" onclick="openSyllabusModal()" data-i18n="btn_add_syllabus">زیادکردنی بابەت</button>
+    </div>
+    <div class="filter-row">
+      <select id="syllabusStageFilter" onchange="renderSyllabus()"></select>
+    </div>
+    <div id="syllabusList"></div>
+  </div>
+
+  <!-- Assessment types -->
+  <div class="view" id="view-assessments" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="assessments_heading">جۆرەکانی هەڵسەنگاندن</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn-outline" onclick="quickAddQuran()" data-i18n="btn_quick_add_quran">زیادکردنی خێرا: قورئان</button>
+        <button class="btn-add" onclick="openTypeModal()" data-i18n="btn_add_type">زیادکردنی جۆر</button>
+      </div>
+    </div>
+    <div id="typesList"></div>
+  </div>
+
+  <!-- Attendance -->
+  <div class="view" id="view-attendance" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="nav_attendance">ئامادەبوون</h2>
+      <button class="btn-outline" onclick="exportAttendanceWord()" data-i18n="btn_export_word">داگرتن وەک Word</button>
+    </div>
+    <div class="filter-row">
+      <input type="month" id="adminAttMonthFilter" onchange="renderAdminAttendance()" style="flex:1">
+      <input type="date" id="adminAttDayFilter" onchange="renderAdminAttendance()" style="flex:1">
+    </div>
+    <div class="filter-row">
+      <select id="adminAttStageFilter" onchange="renderAdminAttendance()"></select>
+      <select id="adminAttSubjectFilter" onchange="renderAdminAttendance()"></select>
+      <button class="btn-outline" id="adminAttDayClearBtn" onclick="clearAdminAttDayFilter()" data-i18n="btn_clear_day" style="display:none">لابردنی ڕۆژ</button>
+    </div>
+    <div id="adminAttendanceSummary"></div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="view" id="view-notifications" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="send_notification_heading">ناردنی ئاگادارکردنەوە</h2>
+      <button class="btn-add" onclick="openNotificationModal()" data-i18n="btn_add_type">زیادکردن</button>
+    </div>
+    <div id="notificationsAdminList"></div>
+  </div>
+
+  <!-- Notes received from teachers -->
+  <div class="view" id="view-admin-notes" style="display:none">
+    <div class="section-heading"><h2 data-i18n="nav_notes_received">تێبینییەکان</h2></div>
+    <div id="adminNotesList"></div>
+  </div>
+
+  <!-- Azkar management -->
+  <div class="view" id="view-azkar-admin" style="display:none">
+    <div class="section-heading">
+      <h2 data-i18n="azkar_page_heading">ئەزکار</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <a class="btn-outline" id="azkarPreviewLink" href="#" target="_blank" data-i18n="btn_preview">پێشبینین</a>
+        <button class="btn-outline" onclick="quickAddAzkarStarter()" data-i18n="btn_quick_add_azkar">زیادکردنی خێرا</button>
+        <button class="btn-add" onclick="openAzkarCategoryModal()" data-i18n="btn_add_section">زیادکردنی بەش</button>
+      </div>
+    </div>
+    <div id="azkarCategoriesList"></div>
+  </div>
+
+  <!-- Settings -->
+  <div class="view" id="view-settings" style="display:none">
+    <h2 style="font-size:18px; margin-bottom:14px" data-i18n="settings_heading">ڕێکخستنەکانی دامەزراوە</h2>
+    <div class="hero-card" style="margin-top:0">
+      <div class="field">
+        <label data-i18n="field_logo">لۆگۆ</label>
+        <div class="dropzone">
+          <img id="settingsLogoPreview" src="" alt="" style="display:none">
+          <input type="file" id="settingsLogoInput" accept="image/png,image/jpeg">
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="field_inst_name">ناوی دامەزراوە</label>
+        <input type="text" id="settingsName">
+      </div>
+      <div class="field">
+        <label data-i18n="field_inst_location">شوێن</label>
+        <input type="text" id="settingsLocation">
+      </div>
+      <div class="field">
+        <label data-i18n="field_inst_phone">ژمارەی مۆبایل</label>
+        <input type="tel" id="settingsPhone">
+      </div>
+      <div class="field">
+        <label data-i18n="field_inst_email">ئیمەیل</label>
+        <input type="email" id="settingsEmail">
+      </div>
+      <div class="field-row" style="display:flex; gap:12px">
+        <div class="field" style="flex:1">
+          <label data-i18n="field_primary_color">ڕەنگی سەرەکی</label>
+          <input type="color" id="settingsPrimary" style="height:44px; padding:4px">
+        </div>
+        <div class="field" style="flex:1">
+          <label data-i18n="field_secondary_color">ڕەنگی لاوەکی</label>
+          <input type="color" id="settingsSecondary" style="height:44px; padding:4px">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()" data-i18n="btn_save_settings">پاشەکەوتکردنی گۆڕانکاری</button>
+    </div>
+
+    <div class="hero-card">
+      <label style="font-size:13px; font-weight:600; display:block; margin-bottom:8px" data-i18n="login_link_label">بەستەری چوونەژوورەوە بۆ مامۆستا، قوتابی و دایک و باوک</label>
+      <div class="code-chip" id="loginLinkChip" style="width:100%; justify-content:space-between; padding:12px 14px; font-size:13px"></div>
+      <button class="btn-outline" style="width:100%; margin-top:10px" onclick="copyLoginLink()" data-i18n="btn_copy_link">کۆپیکردنی بەستەر</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/ui-helpers.js"></script>
+<script src="js/pwa-install.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+// ============================================================
+// State
+// ============================================================
+let currentProfile = null;
+let currentInstitution = null;
+let stagesCache = [];
+let groupsCache = [];
+
+const loginView = document.getElementById('loginView');
+const statusView = document.getElementById('statusView');
+const deniedView = document.getElementById('deniedView');
+const dashboardView = document.getElementById('dashboardView');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function showShell(view) {
+  loginView.style.display = view === 'login' ? 'block' : 'none';
+  statusView.style.display = view === 'status' ? 'block' : 'none';
+  deniedView.style.display = view === 'denied' ? 'block' : 'none';
+  dashboardView.style.display = view === 'dashboard' ? 'block' : 'none';
+  logoutBtn.style.display = view === 'dashboard' ? 'flex' : 'none';
+}
+
+// ============================================================
+// Auth / session
+// ============================================================
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return showShell('login');
+
+  const { data: profile, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (error || !profile || profile.role !== 'institution_admin') return showShell('denied');
+  currentProfile = profile;
+
+  const { data: inst, error: instErr } = await sb.from('institutions').select('*').eq('id', profile.institution_id).single();
+  if (instErr || !inst) return showShell('denied');
+  currentInstitution = inst;
+
+  if (inst.status !== 'approved') {
+    renderStatusView(inst);
+    return showShell('status');
+  }
+
+  showShell('dashboard');
+  renderBrand();
+  const notesUnread = await loadAllData();
+  switchView('overview');
+  initPWA('appPromo', profile.id);
+  announceUnread(notesUnread);
+}
+
+function renderStatusView(inst) {
+  const badge = document.getElementById('statusBadge');
+  const heading = document.getElementById('statusHeading');
+  const body = document.getElementById('statusBody');
+  if (inst.status === 'pending') {
+    badge.textContent = '⏳';
+    heading.textContent = t('pending_heading');
+    body.textContent = t('pending_body');
+  } else if (inst.status === 'rejected') {
+    badge.textContent = '✕';
+    heading.textContent = t('rejected_heading');
+    body.textContent = inst.rejection_reason || '';
+  } else {
+    badge.textContent = '⏸';
+    heading.textContent = t('suspended_heading');
+    body.textContent = t('suspended_body');
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errorBox.classList.remove('show');
+  btn.disabled = true;
+  const fd = new FormData(e.target);
+  const { error } = await sb.auth.signInWithPassword({ email: fd.get('email'), password: fd.get('password') });
+  btn.disabled = false;
+  if (error) {
+    errorBox.textContent = t('error_generic');
+    errorBox.classList.add('show');
+    return;
+  }
+  checkSession();
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await sb.auth.signOut();
+  showShell('login');
+});
+
+function renderBrand() {
+  const box = document.getElementById('brandBox');
+  box.innerHTML = `
+    ${currentInstitution.logo_url
+      ? `<img class="inst-logo" src="${currentInstitution.logo_url}" alt="">`
+      : `<svg class="mark" viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" rx="3" transform="rotate(45 20 20)" fill="none" stroke="var(--gold)" stroke-width="2"/><circle cx="20" cy="20" r="3.5" fill="var(--gold)"/></svg>`}
+    <span>${escapeHtml(currentInstitution.name)}</span>`;
+}
+
+// ============================================================
+// View switching
+// ============================================================
+function switchView(name) {
+  document.querySelectorAll('.view').forEach((v) => v.style.display = 'none');
+  document.getElementById('view-' + name).style.display = 'block';
+  document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => tb.classList.toggle('active', tb.dataset.view === name));
+}
+document.querySelectorAll('#navTabs .nav-grid-item').forEach((tb) => {
+  tb.addEventListener('click', () => switchView(tb.dataset.view));
+});
+
+function renderAll() {
+  renderOverview();
+  renderTeachers();
+  renderStudents();
+  renderStages();
+  renderSyllabus();
+  renderTypes();
+  renderNotificationsAdmin();
+  renderAdminNotes();
+  renderAdminAttendance();
+  renderAzkarAdmin();
+  fillSettings();
+}
+
+// ============================================================
+// Data loading
+// ============================================================
+async function loadAllData() {
+  const [{ data: stages }, { data: groups }] = await Promise.all([
+    sb.from('stages').select('*').order('order_index'),
+    sb.from('groups').select('*').order('name'),
+  ]);
+  stagesCache = stages || [];
+  groupsCache = groups || [];
+
+  await Promise.all([renderOverview(), renderTeachers(), renderStudents(), fillSettings()]);
+  renderStages();
+  renderSyllabus();
+  renderTypes();
+  renderNotificationsAdmin();
+  renderAdminAttendance();
+  renderAzkarAdmin();
+  const notesUnread = await renderAdminNotes();
+  return notesUnread || 0;
+}
+
+// ---------- Overview ----------
+async function renderOverview() {
+  const today = new Date().toISOString().slice(0, 10);
+  const [{ count: tc }, { count: sc }, { count: ac }] = await Promise.all([
+    sb.from('teachers').select('*', { count: 'exact', head: true }),
+    sb.from('students').select('*', { count: 'exact', head: true }),
+    sb.from('assessments').select('*', { count: 'exact', head: true }).eq('assessment_date', today),
+  ]);
+  document.getElementById('statTeachers').textContent = tc ?? 0;
+  document.getElementById('statStudents').textContent = sc ?? 0;
+  document.getElementById('statToday').textContent = ac ?? 0;
+}
+
+// ---------- Teachers ----------
+let teachersCache = [];
+async function renderTeachers() {
+  const { data } = await sb.from('teachers').select('profile_id, code, subject, phone, profiles(full_name, is_active)').order('code');
+  teachersCache = data || [];
+  const { data: assignments } = await sb.from('teacher_stages').select('teacher_profile_id, stage_id');
+  const stageByTeacher = Object.fromEntries((assignments || []).map((a) => [a.teacher_profile_id, a.stage_id]));
+
+  const list = document.getElementById('teachersList');
+  if (!teachersCache.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_teachers')}</div>`;
+    return;
+  }
+  list.innerHTML = teachersCache.map((tch) => {
+    const stageId = stageByTeacher[tch.profile_id];
+    const stage = stagesCache.find((s) => s.id === stageId);
+    return `
+    <div class="list-item ${tch.profiles.is_active ? '' : 'inactive'}" style="cursor:pointer" onclick="openTeacherDetail('${tch.profile_id}', '${escapeHtml(tch.profiles.full_name).replace(/'/g, "\\'")}')">
+      <div class="avatar">${initials(tch.profiles.full_name)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(tch.profiles.full_name)}</div>
+        <div class="meta">${escapeHtml(tch.subject || '')}${stage ? ' · ' + escapeHtml(stage.name) : ''}${tch.phone ? ' · ' + escapeHtml(tch.phone) : ''}</div>
+        <div class="code-chip" style="margin-top:6px">${tch.code}</div>
+      </div>
+      <div class="actions">
+        <button class="icon-sm-btn" onclick="event.stopPropagation(); openTeacherEditModal('${tch.profile_id}')" title="edit">✎</button>
+        <button class="icon-sm-btn" onclick="event.stopPropagation(); toggleTeacherActive('${tch.profile_id}', ${!tch.profiles.is_active})" title="toggle">${tch.profiles.is_active ? '⏸' : '▶'}</button>
+        <div class="icon-sm-btn">›</div>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+function openTeacherModal() {
+  if (!stagesCache.length || !syllabusCache.length) {
+    openModal(`
+      <h3 data-i18n="btn_add_teacher">زیادکردنی مامۆستا</h3>
+      <p class="sub">${t('gating_need_stage_syllabus')}</p>
+      <button class="btn-primary" onclick="closeModal(); switchView(${!stagesCache.length ? "'stages'" : "'syllabus'"})" data-i18n="btn_close">داخستن</button>
+    `);
+    return;
+  }
+  const stageOptions = stagesCache.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  openModal(`
+    <h3 data-i18n="btn_add_teacher">زیادکردنی مامۆستا</h3>
+    <div class="error-box" id="teacherModalError"></div>
+    <form id="teacherForm">
+      <div class="field"><label data-i18n="field_teacher_name">ناوی مامۆستا</label><input type="text" name="full_name" required></div>
+      <div class="field"><label data-i18n="field_teacher_phone">ژمارەی مۆبایل</label><input type="tel" name="phone"></div>
+      <div class="field">
+        <label data-i18n="field_stage">قۆناغ</label>
+        <select name="stage_id" id="teacherStageSelect" required><option value="">—</option>${stageOptions}</select>
+      </div>
+      <div class="field">
+        <label data-i18n="field_teacher_subject">بابەت</label>
+        <select name="subject" id="teacherSubjectSelect" required><option value="">—</option></select>
+      </div>
+      <button type="submit" class="btn-primary" id="teacherSaveBtn" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('teacherStageSelect').addEventListener('change', (e) => {
+    fillSubjectOptions('teacherSubjectSelect', e.target.value);
+  });
+  document.getElementById('teacherForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const btn = document.getElementById('teacherSaveBtn');
+    btn.disabled = true;
+    const { data: { session } } = await sb.auth.getSession();
+    try {
+      const res = await fetch(window.APP_CONFIG.CREATE_MEMBER_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token,
+          'apikey': window.APP_CONFIG.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          role: 'teacher',
+          full_name: fd.get('full_name'),
+          phone: fd.get('phone'),
+          subject: fd.get('subject'),
+          stage_ids: [fd.get('stage_id')],
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        document.getElementById('teacherModalError').textContent = t('toast_error');
+        document.getElementById('teacherModalError').classList.add('show');
+        btn.disabled = false;
+        return;
+      }
+      showGeneratedCode(fd.get('full_name'), t('role_teacher'), result.code);
+      renderTeachers();
+      renderOverview();
+    } catch (err) {
+      btn.disabled = false;
+    }
+  });
+}
+
+// Populates a subject <select> with the distinct syllabus titles registered for a stage
+function fillSubjectOptions(selectId, stageId, preselect) {
+  const subjects = [...new Set(syllabusCache.filter((s) => s.stage_id === stageId).map((s) => s.title))];
+  const el = document.getElementById(selectId);
+  el.innerHTML = '<option value="">—</option>' + subjects.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  if (preselect && subjects.includes(preselect)) el.value = preselect;
+}
+
+function openTeacherEditModal(teacherProfileId) {
+  const tch = teachersCache.find((t2) => t2.profile_id === teacherProfileId);
+  if (!tch) return;
+  sb.from('teacher_stages').select('stage_id').eq('teacher_profile_id', teacherProfileId).maybeSingle().then(({ data: assignment }) => {
+    const currentStageId = assignment ? assignment.stage_id : '';
+    const stageOptions = stagesCache.map((s) => `<option value="${s.id}" ${s.id === currentStageId ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+    openModal(`
+      <h3>${escapeHtml(tch.profiles.full_name)}</h3>
+      <form id="teacherEditForm">
+        <div class="field"><label data-i18n="field_teacher_phone">ژمارەی مۆبایل</label><input type="tel" name="phone" value="${escapeHtml(tch.phone || '')}"></div>
+        <div class="field">
+          <label data-i18n="field_stage">قۆناغ</label>
+          <select name="stage_id" id="teacherEditStageSelect"><option value="">—</option>${stageOptions}</select>
+        </div>
+        <div class="field">
+          <label data-i18n="field_teacher_subject">بابەت</label>
+          <select name="subject" id="teacherEditSubjectSelect"><option value="">—</option></select>
+        </div>
+        <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+      </form>
+    `);
+    fillSubjectOptions('teacherEditSubjectSelect', currentStageId, tch.subject);
+    document.getElementById('teacherEditStageSelect').addEventListener('change', (e) => {
+      fillSubjectOptions('teacherEditSubjectSelect', e.target.value);
+    });
+    document.getElementById('teacherEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const newStageId = fd.get('stage_id');
+
+      await sb.from('teachers').update({
+        phone: fd.get('phone') || null,
+        subject: fd.get('subject') || null,
+      }).eq('profile_id', teacherProfileId);
+
+      await sb.from('teacher_stages').delete().eq('teacher_profile_id', teacherProfileId);
+      if (newStageId) {
+        await sb.from('teacher_stages').insert({
+          teacher_profile_id: teacherProfileId,
+          stage_id: newStageId,
+          institution_id: currentInstitution.id,
+        });
+      }
+      closeModal();
+      toast(t('toast_updated'));
+      renderTeachers();
+    });
+  });
+}
+
+function toggleTeacherActive(profileId, newActive) {
+  if (!newActive && !confirm(t('confirm_deactivate'))) return;
+  sb.from('profiles').update({ is_active: newActive }).eq('id', profileId).then(() => {
+    toast(t('toast_updated'));
+    renderTeachers();
+  });
+}
+
+let lastCredentialCard = null;
+
+function showGeneratedCode(name, role, code, extraInfo) {
+  openModal(`
+    <h3 style="text-align:center; margin-bottom:14px">${escapeHtml(name)}</h3>
+    <canvas id="credentialCanvas" style="width:100%; max-width:320px; display:block; margin:0 auto; border-radius:14px; box-shadow:var(--shadow)"></canvas>
+    <button class="btn-primary" style="width:100%; margin-top:16px" onclick="downloadCredentialCard()" data-i18n="btn_download_card">داگرتنی کارت</button>
+    <button class="btn-outline" style="width:100%; margin-top:10px" onclick="closeModal()" data-i18n="btn_close">داخستن</button>
+  `);
+  drawCredentialCard({ name, role, code, extraInfo });
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let lines = [];
+  words.forEach((word) => {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
+  return lines.length;
+}
+
+function drawCredentialCard({ name, role, code, extraInfo }) {
+  const canvas = document.getElementById('credentialCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 640, H = 900;
+  canvas.width = W;
+  canvas.height = H;
+
+  const loginUrl = `${window.location.origin}${window.location.pathname.replace('admin.html', '')}login.html?inst=${currentInstitution.slug}&code=${encodeURIComponent(code)}`;
+
+  // Background
+  ctx.fillStyle = '#F6F1E4';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header band with institution name
+  ctx.fillStyle = '#1F4B43';
+  ctx.fillRect(0, 0, W, 120);
+  ctx.fillStyle = '#F6F1E4';
+  ctx.textAlign = 'center';
+  ctx.direction = 'rtl';
+  ctx.font = 'bold 30px Arial';
+  ctx.fillText(currentInstitution.name || '', W / 2, 70);
+
+  // Role label (pill-ish text)
+  ctx.fillStyle = '#B08D3E';
+  ctx.font = 'bold 20px Arial';
+  ctx.fillText(role, W / 2, 165);
+
+  // Person name
+  ctx.fillStyle = '#1C231F';
+  ctx.font = 'bold 36px Arial';
+  ctx.fillText(name, W / 2, 215);
+
+  // QR code
+  const qr = qrcode(0, 'M');
+  qr.addData(loginUrl);
+  qr.make();
+  const count = qr.getModuleCount();
+  const qrSize = 340;
+  const qrX = (W - qrSize) / 2;
+  const qrY = 250;
+  const cell = qrSize / count;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(qrX - 16, qrY - 16, qrSize + 32, qrSize + 32);
+  ctx.fillStyle = '#1C231F';
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      if (qr.isDark(r, c)) ctx.fillRect(qrX + c * cell, qrY + r * cell, cell + 0.5, cell + 0.5);
+    }
+  }
+
+  // Code (large, monospace)
+  ctx.font = 'bold 34px monospace';
+  ctx.fillStyle = '#1F4B43';
+  ctx.direction = 'ltr';
+  ctx.fillText(code, W / 2, qrY + qrSize + 70);
+  ctx.direction = 'rtl';
+
+  // Extra info (e.g. parent code for a student card)
+  let cursorY = qrY + qrSize + 70;
+  if (extraInfo) {
+    ctx.font = '18px Arial';
+    ctx.fillStyle = '#6B6858';
+    cursorY += 34;
+    ctx.fillText(extraInfo, W / 2, cursorY);
+  }
+
+  // Divider
+  cursorY += 34;
+  ctx.strokeStyle = '#DCD2B4';
+  ctx.beginPath();
+  ctx.moveTo(60, cursorY);
+  ctx.lineTo(W - 60, cursorY);
+  ctx.stroke();
+
+  // Install instructions
+  ctx.font = '17px Arial';
+  ctx.fillStyle = '#6B6858';
+  const instructions = getLang() === 'ar'
+    ? 'للدخول: امسح الرمز، أو افتح الرابط. للتثبيت على الهاتف: من قائمة المتصفح اختر "إضافة إلى الشاشة الرئيسية"'
+    : 'بۆ چوونەژوورەوە: کۆدەکە بخوێنەرەوە یان بەستەرەکە بکەرەوە. بۆ دامەزراندن لەسەر مۆبایل: لە مێنیوی وێبگەڕ "زیادکردن بۆ ماڵەوە" هەڵبژێرە';
+  cursorY += 40;
+  wrapCanvasText(ctx, instructions, W / 2, cursorY, W - 100, 26);
+
+  lastCredentialCard = { canvas, name };
+}
+
+function downloadCredentialCard() {
+  if (!lastCredentialCard) return;
+  const link = document.createElement('a');
+  link.download = `${lastCredentialCard.name.replace(/\s+/g, '_')}-login-card.png`;
+  link.href = lastCredentialCard.canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ---------- Teacher detail (all their submissions, filterable) ----------
+let currentTeacherDetailId = null;
+
+function openTeacherDetail(teacherId, teacherName) {
+  currentTeacherDetailId = teacherId;
+  document.getElementById('teacherDetailName').textContent = teacherName;
+  document.getElementById('teacherDetailDateFilter').value = '';
+  document.getElementById('teacherDetailStudentFilter').innerHTML = `<option value="">${t('filter_all_students')}</option>` +
+    studentsCache.map((s) => `<option value="${s.profile_id}">${escapeHtml(s.profiles.full_name)}</option>`).join('');
+  switchView('teacher-detail');
+  renderTeacherDetailAssessments();
+}
+
+async function renderTeacherDetailAssessments() {
+  if (!currentTeacherDetailId) return;
+  let query = sb.from('assessments').select('*').eq('teacher_profile_id', currentTeacherDetailId)
+    .order('assessment_date', { ascending: false }).order('created_at', { ascending: false }).limit(200);
+  const dateVal = document.getElementById('teacherDetailDateFilter').value;
+  const studentVal = document.getElementById('teacherDetailStudentFilter').value;
+  if (dateVal) query = query.eq('assessment_date', dateVal);
+  if (studentVal) query = query.eq('student_profile_id', studentVal);
+  const { data } = await query;
+
+  const list = document.getElementById('teacherDetailList');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_assessments')}</div>`;
+    return;
+  }
+  const studentIds = [...new Set(data.map((a) => a.student_profile_id))];
+  const { data: profs } = studentIds.length ? await sb.from('profiles').select('id, full_name').in('id', studentIds) : { data: [] };
+  const nameMap = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name]));
+  const typeMap = Object.fromEntries(typesCache.map((ty) => [ty.id, ty.name]));
+
+  list.innerHTML = data.map((a) => `
+    <div class="list-item">
+      <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;background:${levelColor(a.level)};color:#fff">${levelIcon(a.level)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(nameMap[a.student_profile_id] || '')} · <span style="color:${levelColor(a.level)}">${t('level_' + a.level)}</span></div>
+        <div class="meta">${escapeHtml(typeMap[a.assessment_type_id] || '')}${a.remarks ? ' · ' + escapeHtml(a.remarks) : ''}</div>
+        <div class="meta" style="margin-top:2px">${a.assessment_date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---------- Attendance overview (admin) ----------
+// Two modes:
+//  - month mode (no day filter): per-student counts for the month, plus every
+//    marked day shown inline as small colored chips (not hidden behind a tap).
+//  - day mode (day filter set): a roll call of every scoped student's status
+//    on that one date, including students with nothing marked yet that day.
+const ATT_COLORS = { present: '#3F7D5C', absent: '#A6473A', late: '#B08D3E', excused: '#6B7A8F' };
+let adminAttendanceRows = []; // [{student, counts, records}] for the current filter — reused by export/drill-down
+let adminAttendanceDayRows = []; // [{student, records}] for day mode — reused by export
+
+function fillSubjectFilter(selectEl) {
+  const subjects = [...new Set(teachersCache.map((t2) => t2.subject).filter(Boolean))];
+  const currentValue = selectEl.value;
+  selectEl.innerHTML = `<option value="">${t('filter_all_subjects')}</option>` +
+    subjects.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  selectEl.value = currentValue;
+}
+
+function clearAdminAttDayFilter() {
+  document.getElementById('adminAttDayFilter').value = '';
+  renderAdminAttendance();
+}
+
+async function renderAdminAttendance() {
+  fillStageFilter(document.getElementById('adminAttStageFilter'), true);
+  fillSubjectFilter(document.getElementById('adminAttSubjectFilter'));
+  const monthEl = document.getElementById('adminAttMonthFilter');
+  if (!monthEl.value) monthEl.value = new Date().toISOString().slice(0, 7);
+  const dayFilter = document.getElementById('adminAttDayFilter').value;
+  document.getElementById('adminAttDayClearBtn').style.display = dayFilter ? '' : 'none';
+
+  const stageFilter = document.getElementById('adminAttStageFilter').value;
+  const subjectFilter = document.getElementById('adminAttSubjectFilter').value;
+  const scopedStudents = stageFilter ? studentsCache.filter((s) => s.stage_id === stageFilter) : studentsCache;
+  const list = document.getElementById('adminAttendanceSummary');
+  if (!scopedStudents.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_students')}</div>`;
+    adminAttendanceRows = [];
+    adminAttendanceDayRows = [];
+    return;
+  }
+  const studentIds = scopedStudents.map((s) => s.profile_id);
+
+  if (dayFilter) {
+    let query = sb.from('attendance').select('student_profile_id, status, subject, attendance_date')
+      .in('student_profile_id', studentIds).eq('attendance_date', dayFilter);
+    if (subjectFilter) query = query.eq('subject', subjectFilter);
+    const { data } = await query;
+    const records = data || [];
+    adminAttendanceDayRows = scopedStudents.map((s) => ({
+      student: s,
+      records: records.filter((r) => r.student_profile_id === s.profile_id),
+    }));
+    adminAttendanceRows = [];
+
+    list.innerHTML = adminAttendanceDayRows.map(({ student: s, records: recs }) => `
+      <div class="list-item">
+        <div class="avatar">${initials(s.profiles.full_name)}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(s.profiles.full_name)}</div>
+          <div class="meta">
+            ${recs.length ? recs.map((r) => `<span style="color:${ATT_COLORS[r.status]}">${escapeHtml(r.subject)}: ${t('att_' + r.status)}</span>`).join(' · ')
+              : `<span style="color:var(--muted)">${t('att_not_marked')}</span>`}
+          </div>
+        </div>
+      </div>`).join('');
+    return;
+  }
+
+  const month = monthEl.value;
+  const monthStart = month + '-01';
+  const nextMonth = new Date(month + '-01');
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  const monthEnd = nextMonth.toISOString().slice(0, 10);
+
+  let query = sb.from('attendance').select('student_profile_id, status, subject, attendance_date')
+    .in('student_profile_id', studentIds).gte('attendance_date', monthStart).lt('attendance_date', monthEnd)
+    .order('attendance_date');
+  if (subjectFilter) query = query.eq('subject', subjectFilter);
+  const { data } = await query;
+  const allRecords = data || [];
+
+  adminAttendanceRows = scopedStudents.map((s) => {
+    const records = allRecords.filter((r) => r.student_profile_id === s.profile_id);
+    const counts = { present: 0, absent: 0, late: 0, excused: 0 };
+    records.forEach((r) => { counts[r.status]++; });
+    return { student: s, counts, records };
+  });
+
+  list.innerHTML = adminAttendanceRows.map(({ student: s, counts: c, records }) => `
+      <div class="list-item" style="cursor:pointer;flex-wrap:wrap" onclick="openAttendanceDetail('${s.profile_id}', '${escapeHtml(s.profiles.full_name).replace(/'/g, "\\'")}')">
+        <div class="avatar">${initials(s.profiles.full_name)}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(s.profiles.full_name)}</div>
+          <div class="meta">
+            <span style="color:#3F7D5C">${t('att_present')} ${c.present}</span> ·
+            <span style="color:#A6473A">${t('att_absent')} ${c.absent}</span> ·
+            <span style="color:#B08D3E">${t('att_late')} ${c.late}</span> ·
+            <span style="color:#6B7A8F">${t('att_excused')} ${c.excused}</span>
+          </div>
+          <div class="att-chip-row">
+            ${records.map((r) => `<span class="att-chip" style="background:${ATT_COLORS[r.status]}22;color:${ATT_COLORS[r.status]}" title="${escapeHtml(r.subject)} — ${t('att_' + r.status)}">${r.attendance_date.slice(8, 10)} ${escapeHtml(r.subject)}</span>`).join('')}
+          </div>
+        </div>
+        <div class="icon-sm-btn">›</div>
+      </div>`).join('');
+}
+
+function openAttendanceDetail(studentProfileId, studentName) {
+  const row = adminAttendanceRows.find((r) => r.student.profile_id === studentProfileId);
+  const records = row ? row.records : [];
+  openModal(`
+    <h3>${escapeHtml(studentName)}</h3>
+    ${records.length ? records.map((r) => `
+      <div class="list-item">
+        <div class="avatar" style="background:${ATT_COLORS[r.status]}22; color:${ATT_COLORS[r.status]}">●</div>
+        <div class="info">
+          <div class="name">${t('att_' + r.status)} · ${escapeHtml(r.subject)}</div>
+          <div class="meta">${r.attendance_date}</div>
+        </div>
+      </div>
+    `).join('') : `<div class="empty-state">${t('empty_attendance')}</div>`}
+  `);
+}
+
+function exportAttendanceWord() {
+  const monthEl = document.getElementById('adminAttMonthFilter');
+  const dayFilter = document.getElementById('adminAttDayFilter').value;
+  const stageFilter = document.getElementById('adminAttStageFilter').value;
+  const subjectFilter = document.getElementById('adminAttSubjectFilter').value;
+  const stageName = stageFilter ? (stagesCache.find((s) => s.id === stageFilter)?.name || '') : t('filter_all_stages');
+  const subjectName = subjectFilter || t('filter_all_subjects');
+
+  let tableRows, headerRow, periodLabel;
+  if (dayFilter) {
+    periodLabel = dayFilter;
+    headerRow = `<tr><th>${t('field_student_name')}</th><th>${t('field_subject')}</th><th>${t('nav_attendance')}</th></tr>`;
+    tableRows = adminAttendanceDayRows.flatMap(({ student: s, records }) =>
+      records.length ? records.map((r) => `<tr><td>${escapeHtml(s.profiles.full_name)}</td><td>${escapeHtml(r.subject)}</td><td>${t('att_' + r.status)}</td></tr>`)
+        : [`<tr><td>${escapeHtml(s.profiles.full_name)}</td><td>—</td><td>${t('att_not_marked')}</td></tr>`]
+    ).join('');
+  } else {
+    periodLabel = monthEl.value;
+    headerRow = `<tr><th>${t('field_student_name')}</th><th>${t('att_present')}</th><th>${t('att_absent')}</th><th>${t('att_late')}</th><th>${t('att_excused')}</th></tr>`;
+    tableRows = adminAttendanceRows.map(({ student: s, counts: c }) => `
+      <tr>
+        <td>${escapeHtml(s.profiles.full_name)}</td>
+        <td>${c.present}</td>
+        <td>${c.absent}</td>
+        <td>${c.late}</td>
+        <td>${c.excused}</td>
+      </tr>`).join('');
+  }
+
+  const html = `
+    <p>${escapeHtml(currentInstitution.name)} — ${escapeHtml(stageName)} — ${escapeHtml(subjectName)} — ${periodLabel}</p>
+    <table>
+      ${headerRow}
+      ${tableRows}
+    </table>`;
+  downloadAsWord(`attendance-${periodLabel}`, t('nav_attendance'), html);
+}
+
+// ---------- Students ----------
+let studentsCache = [];
+function fillStageFilter(selectEl, includeAllOption) {
+  const currentValue = selectEl.value;
+  selectEl.innerHTML = (includeAllOption ? `<option value="">${t('filter_all_stages')}</option>` : `<option value="">${t('field_stage')}</option>`) +
+    stagesCache.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  selectEl.value = currentValue; // restore selection — a rebuilt <select> otherwise resets to the first option
+}
+
+async function renderStudents() {
+  fillStageFilter(document.getElementById('studentStageFilter'), true);
+  const { data } = await sb.from('students').select('profile_id, code, parent_code, stage_id, group_id, profiles(full_name, is_active)').order('code');
+  studentsCache = data || [];
+  const filterVal = document.getElementById('studentStageFilter').value;
+  const filtered = filterVal ? studentsCache.filter((s) => s.stage_id === filterVal) : studentsCache;
+
+  const list = document.getElementById('studentsList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_students')}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map((st) => {
+    const stage = stagesCache.find((s) => s.id === st.stage_id);
+    const group = groupsCache.find((g) => g.id === st.group_id);
+    return `
+      <div class="list-item ${st.profiles.is_active ? '' : 'inactive'}">
+        <div class="avatar">${initials(st.profiles.full_name)}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(st.profiles.full_name)}</div>
+          <div class="meta">${stage ? escapeHtml(stage.name) : ''}${group ? ' · ' + escapeHtml(group.name) : ''}</div>
+          <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap">
+            <div class="code-chip">${st.code}</div>
+            <div class="code-chip" style="background:transparent; border:1px dashed var(--line)">${st.parent_code}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="icon-sm-btn" onclick="openStudentEditModal('${st.profile_id}')" title="edit">✎</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function exportStudentsWord() {
+  const filterVal = document.getElementById('studentStageFilter').value;
+  const rows = filterVal ? studentsCache.filter((s) => s.stage_id === filterVal) : studentsCache;
+  const stageName = filterVal ? (stagesCache.find((s) => s.id === filterVal)?.name || '') : t('filter_all_stages');
+
+  const tableRows = rows.map((st) => {
+    const stage = stagesCache.find((s) => s.id === st.stage_id);
+    const group = groupsCache.find((g) => g.id === st.group_id);
+    return `<tr>
+      <td>${escapeHtml(st.profiles.full_name)}</td>
+      <td>${stage ? escapeHtml(stage.name) : ''}</td>
+      <td>${group ? escapeHtml(group.name) : ''}</td>
+      <td>${st.code}</td>
+      <td>${st.parent_code}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `
+    <p>${escapeHtml(currentInstitution.name)} — ${escapeHtml(stageName)}</p>
+    <table>
+      <tr>
+        <th>${t('field_student_name')}</th>
+        <th>${t('field_stage')}</th>
+        <th>${t('field_group')}</th>
+        <th>${t('field_teacher_code')}</th>
+        <th>${t('field_parent_code')}</th>
+      </tr>
+      ${tableRows}
+    </table>`;
+  downloadAsWord(`students-${todayISO()}`, t('students_heading'), html);
+}
+
+function openStudentEditModal(studentProfileId) {
+  const st = studentsCache.find((s) => s.profile_id === studentProfileId);
+  if (!st) return;
+  const stageOptions = stagesCache.map((s) => `<option value="${s.id}" ${s.id === st.stage_id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+  openModal(`
+    <h3>${escapeHtml(st.profiles.full_name)}</h3>
+    <form id="studentEditForm">
+      <div class="field">
+        <label data-i18n="field_stage">قۆناغ</label>
+        <select name="stage_id" id="studentEditStageSelect"><option value="">—</option>${stageOptions}</select>
+      </div>
+      <div class="field">
+        <label data-i18n="field_group">گروپ</label>
+        <select name="group_id" id="studentEditGroupSelect"><option value="">—</option></select>
+      </div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  function fillGroups(stageId, preselect) {
+    const groups = groupsCache.filter((g) => g.stage_id === stageId);
+    const sel = document.getElementById('studentEditGroupSelect');
+    sel.innerHTML = '<option value="">—</option>' + groups.map((g) => `<option value="${g.id}" ${g.id === preselect ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
+  }
+  fillGroups(st.stage_id, st.group_id);
+  document.getElementById('studentEditStageSelect').addEventListener('change', (e) => fillGroups(e.target.value));
+  document.getElementById('studentEditForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await sb.from('students').update({
+      stage_id: fd.get('stage_id') || null,
+      group_id: fd.get('group_id') || null,
+    }).eq('profile_id', studentProfileId);
+    closeModal();
+    toast(t('toast_updated'));
+    renderStudents();
+  });
+}
+
+function openStudentModal() {
+  if (!stagesCache.length || !syllabusCache.length) {
+    openModal(`
+      <h3 data-i18n="btn_add_student">زیادکردنی قوتابی</h3>
+      <p class="sub">${t('gating_need_stage_syllabus')}</p>
+      <button class="btn-primary" onclick="closeModal(); switchView(${!stagesCache.length ? "'stages'" : "'syllabus'"})" data-i18n="btn_close">داخستن</button>
+    `);
+    return;
+  }
+  const stageOptions = stagesCache.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  const suggestedParentCode = generateCode();
+  openModal(`
+    <h3 data-i18n="btn_add_student">زیادکردنی قوتابی</h3>
+    <div class="error-box" id="studentModalError"></div>
+    <form id="studentForm">
+      <div class="field"><label data-i18n="field_student_name">ناوی قوتابی</label><input type="text" name="full_name" required></div>
+      <div class="field"><label data-i18n="field_stage">قۆناغ</label>
+        <select name="stage_id" id="studentStageSelect"><option value="">—</option>${stageOptions}</select>
+      </div>
+      <div class="field"><label data-i18n="field_group">گروپ</label>
+        <select name="group_id" id="studentGroupSelect"><option value="">—</option></select>
+      </div>
+      <div class="field"><label data-i18n="field_dob">بەرواری لەدایکبوون</label><input type="date" name="date_of_birth"></div>
+      <div class="field">
+        <label data-i18n="field_parent_code">کۆدی دایک و باوک</label>
+        <input type="text" name="parent_code" value="${suggestedParentCode}" style="font-family:monospace">
+      </div>
+      <button type="submit" class="btn-primary" id="studentSaveBtn" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('studentStageSelect').addEventListener('change', (e) => {
+    const groups = groupsCache.filter((g) => g.stage_id === e.target.value);
+    document.getElementById('studentGroupSelect').innerHTML = '<option value="">—</option>' +
+      groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  });
+  document.getElementById('studentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const btn = document.getElementById('studentSaveBtn');
+    btn.disabled = true;
+    const { data: { session } } = await sb.auth.getSession();
+    try {
+      const res = await fetch(window.APP_CONFIG.CREATE_MEMBER_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token,
+          'apikey': window.APP_CONFIG.SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          role: 'student',
+          full_name: fd.get('full_name'),
+          stage_id: fd.get('stage_id') || null,
+          group_id: fd.get('group_id') || null,
+          date_of_birth: fd.get('date_of_birth') || null,
+          parent_code: fd.get('parent_code'),
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        document.getElementById('studentModalError').textContent = t('toast_error');
+        document.getElementById('studentModalError').classList.add('show');
+        btn.disabled = false;
+        return;
+      }
+      showGeneratedCode(fd.get('full_name'), `${result.code}   ·   ${fd.get('parent_code')}`);
+      renderStudents();
+      renderOverview();
+    } catch (err) {
+      btn.disabled = false;
+    }
+  });
+}
+
+// ---------- Stages & Groups ----------
+function renderStages() {
+  const list = document.getElementById('stagesList');
+  if (!stagesCache.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_stages')}</div>`;
+    return;
+  }
+  list.innerHTML = stagesCache.map((stage) => {
+    const groups = groupsCache.filter((g) => g.stage_id === stage.id);
+    return `
+      <div class="accordion-item" data-stage="${stage.id}">
+        <div class="accordion-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="name">${escapeHtml(stage.name)}</span>
+          <span class="chevron">⌄</span>
+        </div>
+        <div class="accordion-body">
+          ${groups.length ? groups.map((g) => `<div class="group-row"><span>${escapeHtml(g.name)}</span></div>`).join('') : `<div class="group-row" style="color:var(--muted)">${t('empty_groups')}</div>`}
+          <button class="btn-outline" style="width:100%; margin-top:10px" onclick="openGroupModal('${stage.id}', event)" data-i18n="btn_add_group">زیادکردنی گروپ</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openStageModal() {
+  openModal(`
+    <h3 data-i18n="btn_add_stage">زیادکردنی قۆناغ</h3>
+    <form id="stageForm">
+      <div class="field"><label data-i18n="field_stage_name">ناوی قۆناغ</label><input type="text" name="name" required></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('stageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('stages').insert({
+      institution_id: currentInstitution.id,
+      name: fd.get('name'),
+      order_index: stagesCache.length,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    const { data } = await sb.from('stages').select('*').order('order_index');
+    stagesCache = data || [];
+    renderStages();
+  });
+}
+
+function openGroupModal(stageId, evt) {
+  if (evt) evt.stopPropagation();
+  openModal(`
+    <h3 data-i18n="btn_add_group">زیادکردنی گروپ</h3>
+    <form id="groupForm">
+      <div class="field"><label data-i18n="field_group_name">ناوی گروپ</label><input type="text" name="name" required></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('groupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('groups').insert({
+      institution_id: currentInstitution.id,
+      stage_id: stageId,
+      name: fd.get('name'),
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    const { data } = await sb.from('groups').select('*').order('name');
+    groupsCache = data || [];
+    renderStages();
+  });
+}
+
+// ---------- Syllabus ----------
+let syllabusCache = [];
+async function renderSyllabus() {
+  fillStageFilter(document.getElementById('syllabusStageFilter'), true);
+  const { data } = await sb.from('syllabus').select('*').order('created_at', { ascending: false });
+  syllabusCache = data || [];
+  const filterVal = document.getElementById('syllabusStageFilter').value;
+  const filtered = filterVal ? syllabusCache.filter((s) => s.stage_id === filterVal) : syllabusCache;
+
+  const list = document.getElementById('syllabusList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_syllabus')}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map((s) => {
+    const stage = stagesCache.find((st) => st.id === s.stage_id);
+    return `
+      <div class="list-item">
+        <div class="avatar">📘</div>
+        <div class="info">
+          <div class="name">${escapeHtml(s.title)}</div>
+          <div class="meta">${stage ? escapeHtml(stage.name) : ''}${s.description ? ' · ' + escapeHtml(s.description) : ''}</div>
+        </div>
+        ${s.file_url ? `<a class="icon-sm-btn" href="${s.file_url}" target="_blank" rel="noopener">↗</a>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function openSyllabusModal() {
+  const stageOptions = stagesCache.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  openModal(`
+    <h3 data-i18n="btn_add_syllabus">زیادکردنی بابەت</h3>
+    <form id="syllabusForm">
+      <div class="field"><label data-i18n="field_syllabus_title">ناونیشان</label><input type="text" name="title" required></div>
+      <div class="field"><label data-i18n="field_stage">قۆناغ</label><select name="stage_id"><option value="">—</option>${stageOptions}</select></div>
+      <div class="field"><label data-i18n="field_syllabus_desc">وردەکاری</label><textarea name="description" rows="3"></textarea></div>
+      <div class="field"><label data-i18n="field_syllabus_file">بەستەری فایل</label><input type="url" name="file_url" placeholder="https://"></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('syllabusForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('syllabus').insert({
+      institution_id: currentInstitution.id,
+      title: fd.get('title'),
+      stage_id: fd.get('stage_id') || null,
+      description: fd.get('description') || null,
+      file_url: fd.get('file_url') || null,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderSyllabus();
+  });
+}
+
+// ---------- Assessment types ----------
+let typesCache = [];
+async function renderTypes() {
+  const { data } = await sb.from('assessment_types').select('*').order('created_at');
+  typesCache = data || [];
+  const list = document.getElementById('typesList');
+  if (!typesCache.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_types')}</div>`;
+    return;
+  }
+  list.innerHTML = typesCache.map((ty) => `
+    <div class="type-card">
+      <div class="name">${escapeHtml(ty.name)}</div>
+      <div class="type-fields">
+        ${(ty.fields || []).map((f) => `<span class="field-tag">${escapeHtml(f.label_ckb || f.label_ar || f.key)}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function quickAddQuran() {
+  const fields = [
+    { key: 'surah', label_ckb: 'سورەت', label_ar: 'السورة', type: 'text' },
+    { key: 'verse_from', label_ckb: 'ئایەتی یەکەم', label_ar: 'من آية', type: 'number' },
+    { key: 'verse_to', label_ckb: 'ئایەتی کۆتایی', label_ar: 'إلى آية', type: 'number' },
+  ];
+  const { error } = await sb.from('assessment_types').insert({
+    institution_id: currentInstitution.id,
+    name: 'قورئان', name_ar: 'القرآن', name_ku: 'قورئان',
+    icon: 'book-open',
+    fields,
+  });
+  if (error) { toast(t('toast_error'), 'error'); return; }
+  toast(t('toast_created'));
+  renderTypes();
+}
+
+function openTypeModal() {
+  openModal(`
+    <h3 data-i18n="btn_add_type">زیادکردنی جۆر</h3>
+    <form id="typeForm">
+      <div class="field"><label data-i18n="field_type_name">ناوی جۆر</label><input type="text" name="name" required></div>
+      <label style="font-size:13px; font-weight:600; display:block; margin:16px 0 8px" data-i18n="field_add_field">خانەکان</label>
+      <div id="fieldRows"></div>
+      <button type="button" class="btn-outline" style="width:100%; margin-bottom:14px" onclick="addFieldRow()" data-i18n="btn_add_field_row">زیادکردنی خانە</button>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  addFieldRow();
+  document.getElementById('typeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const labels = fd.getAll('field_label').filter((l) => l.trim());
+    const usedKeys = new Set();
+    const fields = labels.map((label) => {
+      let key = label.trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '_').slice(0, 30) || 'field';
+      let finalKey = key, i = 1;
+      while (usedKeys.has(finalKey)) finalKey = `${key}_${i++}`;
+      usedKeys.add(finalKey);
+      return { key: finalKey, label_ckb: label, label_ar: label, type: 'text' };
+    });
+    const { error } = await sb.from('assessment_types').insert({
+      institution_id: currentInstitution.id,
+      name: fd.get('name'),
+      fields,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderTypes();
+  });
+}
+
+function addFieldRow() {
+  const row = document.createElement('div');
+  row.className = 'builder-row';
+  row.innerHTML = `<input type="text" name="field_label" data-i18n-placeholder="field_field_label" placeholder="${t('field_field_label')}">
+    <button type="button" class="icon-sm-btn" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('fieldRows').appendChild(row);
+}
+
+// ---------- Notifications ----------
+async function renderNotificationsAdmin() {
+  const { data } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(50);
+  const list = document.getElementById('notificationsAdminList');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_notifications')}</div>`;
+    return;
+  }
+  const targetLabel = (n) => {
+    if (n.target === 'stage') return stagesCache.find((s) => s.id === n.target_stage_id)?.name || t('target_stage');
+    if (n.target === 'group') return groupsCache.find((g) => g.id === n.target_group_id)?.name || t('target_group');
+    return t('target_' + n.target);
+  };
+  list.innerHTML = data.map((n) => `
+    <div class="list-item">
+      <div class="avatar">🔔</div>
+      <div class="info">
+        <div class="name">${escapeHtml(n.title)}</div>
+        <div class="meta">${escapeHtml(targetLabel(n))} · ${escapeHtml(n.body)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---------- Notes received from teachers ----------
+async function renderAdminNotes() {
+  const { data: notes } = await sb.from('notes').select('*').eq('to_admin', true).order('created_at', { ascending: false }).limit(100);
+  const list = document.getElementById('adminNotesList');
+  if (!notes || !notes.length) {
+    setTabBadge('[data-view="admin-notes"]', 0);
+    list.innerHTML = `<div class="empty-state">${t('empty_notes_received')}</div>`;
+    return 0;
+  }
+  const unreadCount = notes.filter((n) => !n.is_read).length;
+  setTabBadge('[data-view="admin-notes"]', unreadCount);
+
+  const senderIds = [...new Set(notes.map((n) => n.from_profile_id).filter(Boolean))];
+  const studentIds = [...new Set(notes.map((n) => n.student_profile_id).filter(Boolean))];
+  const allIds = [...new Set([...senderIds, ...studentIds])];
+  const { data: profs } = allIds.length ? await sb.from('profiles').select('id, full_name').in('id', allIds) : { data: [] };
+  const nameMap = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name]));
+
+  list.innerHTML = notes.map((n) => {
+    const isUnread = !n.is_read;
+    return `
+    <div class="list-item ${isUnread ? 'unread' : ''}" ${isUnread ? `style="cursor:pointer" onclick="markAdminNoteRead('${n.id}')"` : ''}>
+      <div class="avatar">✉</div>
+      <div class="info">
+        <div class="name">${escapeHtml(nameMap[n.from_profile_id] || '')}${isUnread ? '<span class="unread-dot"></span>' : ''}</div>
+        <div class="meta">${escapeHtml(nameMap[n.student_profile_id] || '')} · ${escapeHtml(n.message)}</div>
+      </div>
+    </div>
+  `;
+  }).join('');
+  return unreadCount;
+}
+
+async function markAdminNoteRead(noteId) {
+  await sb.from('notes').update({ is_read: true }).eq('id', noteId);
+  renderAdminNotes();
+}
+
+// ---------- Azkar management ----------
+let azkarCategoriesCache = [];
+let azkarItemsCache = [];
+
+// Small icon per category, matched by keyword so admin-created custom
+// sections (any language) still get a sensible fallback icon.
+function azkarCategoryIcon(name) {
+  const n = name || '';
+  if (n.includes('بەیانی') || n.includes('صباح')) return '☀️';
+  if (n.includes('ئێوارە') || n.includes('مساء')) return '🌙';
+  if (n.includes('ئەرک') || n.includes('واجب')) return '📝';
+  return '📿';
+}
+
+async function renderAzkarAdmin() {
+  const previewLink = document.getElementById('azkarPreviewLink');
+  if (previewLink) previewLink.href = `azkar.html?inst=${currentInstitution.slug}`;
+
+  const [{ data: cats }, { data: its }] = await Promise.all([
+    sb.from('azkar_categories').select('*').order('order_index'),
+    sb.from('azkar_items').select('*').order('order_index'),
+  ]);
+  azkarCategoriesCache = cats || [];
+  azkarItemsCache = its || [];
+
+  const list = document.getElementById('azkarCategoriesList');
+  if (!azkarCategoriesCache.length) {
+    list.innerHTML = `<div class="empty-state">${t('empty_azkar_categories')}</div>`;
+    return;
+  }
+  list.innerHTML = azkarCategoriesCache.map((cat) => {
+    const catItems = azkarItemsCache.filter((i) => i.category_id === cat.id);
+    return `
+      <div class="accordion-item" data-cat="${cat.id}">
+        <div class="accordion-head" onclick="this.parentElement.classList.toggle('open')">
+          <span class="name">${azkarCategoryIcon(cat.name)} ${escapeHtml(cat.name)} <span class="sub" style="font-size:12px">(${catItems.length})</span></span>
+          <span class="chevron">⌄</span>
+        </div>
+        <div class="accordion-body">
+          ${catItems.length ? catItems.map((item) => `
+            <div class="group-row" style="align-items:flex-start; flex-direction:column; gap:4px; padding:10px 0">
+              <div style="display:flex; justify-content:space-between; width:100%">
+                <strong style="font-family:'Amiri',serif">${escapeHtml(item.arabic_text)}</strong>
+                <button class="icon-sm-btn" onclick="deleteAzkarItem('${item.id}', event)">🗑</button>
+              </div>
+              <div class="sub" style="font-size:12px">${t('field_target_count')}: ${item.target_count}</div>
+            </div>
+          `).join('') : `<div class="group-row" style="color:var(--muted)">${t('empty_azkar_categories')}</div>`}
+          <div style="display:flex; gap:8px; margin-top:10px">
+            <button class="btn-outline" style="flex:1" onclick="openAzkarItemModal('${cat.id}', event)" data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</button>
+            <button class="icon-sm-btn" onclick="deleteAzkarCategory('${cat.id}', event)">🗑</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openAzkarCategoryModal() {
+  openModal(`
+    <h3 data-i18n="btn_add_section">زیادکردنی بەش</h3>
+    <form id="azkarCategoryForm">
+      <div class="field"><label data-i18n="field_section_name">ناوی بەش</label><input type="text" name="name" required></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('azkarCategoryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('azkar_categories').insert({
+      institution_id: currentInstitution.id,
+      name: fd.get('name'),
+      order_index: azkarCategoriesCache.length,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderAzkarAdmin();
+  });
+}
+
+function openAzkarItemModal(categoryId, evt) {
+  if (evt) evt.stopPropagation();
+  openModal(`
+    <h3 data-i18n="btn_add_azkar_item">زیادکردنی ئەزکار</h3>
+    <form id="azkarItemForm">
+      <div class="field"><label data-i18n="field_arabic_text">دەقی عەرەبی</label><textarea name="arabic_text" rows="2" required></textarea></div>
+      <div class="field"><label data-i18n="field_translit">دەنگنووسین (ئارەزوومەندانە)</label><input type="text" name="translit"></div>
+      <div class="field"><label data-i18n="field_meaning">واتا (ئارەزوومەندانە)</label><input type="text" name="meaning"></div>
+      <div class="field"><label data-i18n="field_target_count">ژمارەی دووبارەکردنەوە</label><input type="number" name="target_count" value="1" min="1" required></div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('azkarItemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('azkar_items').insert({
+      institution_id: currentInstitution.id,
+      category_id: categoryId,
+      arabic_text: fd.get('arabic_text'),
+      translit: fd.get('translit') || null,
+      meaning: fd.get('meaning') || null,
+      target_count: parseInt(fd.get('target_count'), 10) || 1,
+      order_index: azkarItemsCache.filter((i) => i.category_id === categoryId).length,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderAzkarAdmin();
+  });
+}
+
+// Deletes immediately on tap — no confirm() dialog, since window.confirm()
+// can render unreliably inside an installed/standalone PWA and made
+// deletion feel like it silently did nothing. If you'd rather have a
+// confirmation step back, say so and I'll add an in-app confirm modal
+// instead (safer against mis-taps, but back to two taps).
+async function deleteAzkarItem(itemId, evt) {
+  if (evt) evt.stopPropagation();
+  await sb.from('azkar_items').delete().eq('id', itemId);
+  toast(t('toast_deleted'));
+  renderAzkarAdmin();
+}
+
+async function deleteAzkarCategory(categoryId, evt) {
+  if (evt) evt.stopPropagation();
+  await sb.from('azkar_categories').delete().eq('id', categoryId);
+  toast(t('toast_deleted'));
+  renderAzkarAdmin();
+}
+
+async function quickAddAzkarStarter() {
+  const starter = [
+    { category: 'ئەزکاری بەیانی', items: [
+      { arabic_text: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ', translit: 'Aṣbaḥnā wa aṣbaḥal-mulku lillāh, wal-ḥamdu lillāh', meaning: 'بەیانیمان کرد و موڵکداری هەر بۆ خودایە', target_count: 1 },
+      { arabic_text: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا وَبِكَ نَمُوتُ', translit: 'Allāhumma bika aṣbaḥnā, wa bika amsaynā', meaning: 'خودایە بە تۆ بەیانیمان کرد', target_count: 1 },
+      { arabic_text: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ', translit: 'Āyatul-Kursī', meaning: 'ئایەتی کورسی، خوێندنەوەی بەیانیان پارێزەری دەبەخشێت', target_count: 1 },
+      { arabic_text: 'قُلْ هُوَ اللَّهُ أَحَدٌ، اللَّهُ الصَّمَدُ، لَمْ يَلِدْ وَلَمْ يُولَدْ، وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ', translit: 'Qul huwallāhu aḥad', meaning: 'سورەتی ئیخلاس، سێ جار دووبارە بکرێتەوە', target_count: 3 },
+      { arabic_text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ', translit: 'Sayyidul-Istighfār', meaning: 'باشترین داواکاری لێخۆشبوون لە خودا', target_count: 1 },
+      { arabic_text: 'اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللَّهُ لَا إِلَٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ', translit: 'Allāhumma innī aṣbaḥtu ushhiduk', meaning: 'شایەتیدان بۆ یەکخوایی و پێغەمبەرایەتی موحەممەد ﷺ', target_count: 4 },
+      { arabic_text: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَٰهَ إِلَّا أَنْتَ', translit: 'Allāhumma ʿāfinī fī badanī', meaning: 'داواکردنی تەندروستی بۆ جەستە و گوێ و چاو', target_count: 3 },
+      { arabic_text: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلَٰهَ إِلَّا أَنْتَ', translit: 'Allāhumma innī aʿūdhu bika minal-kufri wal-faqr', meaning: 'پەنابردنە بەر خودا لە بێباوەڕی و هەژاری و سزای گۆڕ', target_count: 3 },
+      { arabic_text: 'حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', translit: 'Ḥasbiyallāhu lā ilāha illā huwa', meaning: 'پشتبەستن بە خودا بەسە', target_count: 7 },
+      { arabic_text: 'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ', translit: 'Bismillāhil-ladhī lā yaḍurru maʿa ismihi shayʾ', meaning: 'بەناوی خودا کە هیچ شتێک لەگەڵ ناوی زیانی نییە', target_count: 3 },
+      { arabic_text: 'رَضِيتُ بِاللَّهِ رَبًّا وَبِالْإِسْلَامِ دِينًا وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا', translit: 'Raḍītu billāhi rabbā', meaning: 'ڕازیبوون بە خودا وەک پەروەردگار', target_count: 3 },
+      { arabic_text: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَىٰ نَفْسِي طَرْفَةَ عَيْنٍ', translit: 'Yā Ḥayyu yā Qayyūm', meaning: 'داواکردنی یارمەتی و چاکسازی هەموو کارەکان لە خودا', target_count: 1 },
+    ]},
+    { category: 'ئەزکاری ئێوارە', items: [
+      { arabic_text: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ', translit: 'Amsaynā wa amsal-mulku lillāh', meaning: 'ئێوارەمان کرد و موڵکداری هەر بۆ خودایە', target_count: 1 },
+      { arabic_text: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ', translit: 'Allāhumma innī asʾalukal-ʿāfiyah', meaning: 'خودایە داوای تەندروستیت لێدەکەم', target_count: 1 },
+      { arabic_text: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ', translit: 'Āyatul-Kursī', meaning: 'ئایەتی کورسی، خوێندنەوەی ئێوارەیان پارێزەری دەبەخشێت', target_count: 1 },
+      { arabic_text: 'قُلْ هُوَ اللَّهُ أَحَدٌ، اللَّهُ الصَّمَدُ، لَمْ يَلِدْ وَلَمْ يُولَدْ، وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ', translit: 'Qul huwallāhu aḥad', meaning: 'سورەتی ئیخلاس، سێ جار دووبارە بکرێتەوە', target_count: 3 },
+      { arabic_text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَىٰ عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ', translit: 'Sayyidul-Istighfār', meaning: 'باشترین داواکاری لێخۆشبوون لە خودا', target_count: 1 },
+      { arabic_text: 'اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ وَأُشْهِدُ حَمَلَةَ عَرْشِكَ وَمَلَائِكَتَكَ وَجَمِيعَ خَلْقِكَ أَنَّكَ أَنْتَ اللَّهُ لَا إِلَٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ', translit: 'Allāhumma innī amsaytu ushhiduk', meaning: 'شایەتیدان بۆ یەکخوایی و پێغەمبەرایەتی موحەممەد ﷺ', target_count: 4 },
+      { arabic_text: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَٰهَ إِلَّا أَنْتَ', translit: 'Allāhumma ʿāfinī fī badanī', meaning: 'داواکردنی تەندروستی بۆ جەستە و گوێ و چاو', target_count: 3 },
+      { arabic_text: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلَٰهَ إِلَّا أَنْتَ', translit: 'Allāhumma innī aʿūdhu bika minal-kufri wal-faqr', meaning: 'پەنابردنە بەر خودا لە بێباوەڕی و هەژاری و سزای گۆڕ', target_count: 3 },
+      { arabic_text: 'أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ', translit: 'Aʿūdhu bikalimātillāhit-tāmmāti min sharri mā khalaq', meaning: 'پەنابردنە بەر وشە تەواوەکانی خودا لە خراپەی دروستکراوان', target_count: 3 },
+      { arabic_text: 'حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ', translit: 'Ḥasbiyallāhu lā ilāha illā huwa', meaning: 'پشتبەستن بە خودا بەسە', target_count: 7 },
+      { arabic_text: 'رَضِيتُ بِاللَّهِ رَبًّا وَبِالْإِسْلَامِ دِينًا وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا', translit: 'Raḍītu billāhi rabbā', meaning: 'ڕازیبوون بە خودا وەک پەروەردگار', target_count: 3 },
+    ]},
+    { category: 'ئەزکاری گشتی', items: [
+      { arabic_text: 'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ', translit: 'Subḥānallāhi wa biḥamdih', meaning: 'پاکی بۆ خودا لەگەڵ سوپاسی', target_count: 33 },
+      { arabic_text: 'أَسْتَغْفِرُ اللَّهَ', translit: 'Astaghfirullāh', meaning: 'داوای لێخۆشبوون لە خودا دەکەم', target_count: 33 },
+      { arabic_text: 'اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ', translit: 'Allāhumma ṣalli ʿalā Muḥammad', meaning: 'خودایە ڕەحمەت بنێرە بۆ موحەممەد', target_count: 10 },
+    ]},
+    // Empty on purpose — this section is filled in by each stage's
+    // teacher (see teacher.html), not seeded here, since its whole
+    // point is teacher-assigned "required" azkar rather than default
+    // content everyone shares.
+    { category: 'ئەرک', items: [] },
+  ];
+
+  // Safe to run more than once: an institution that already used the
+  // starter (e.g. before the fuller morning/evening lists existed, or
+  // before the Duty section existed) can click it again to top up —
+  // existing sections/items are matched by name/text and skipped
+  // rather than duplicated.
+  for (const cat of starter) {
+    let catRow = azkarCategoriesCache.find((c) => c.institution_id === currentInstitution.id && c.name === cat.category);
+    if (!catRow) {
+      const { data: newCat, error: catErr } = await sb.from('azkar_categories').insert({
+        institution_id: currentInstitution.id,
+        name: cat.category,
+        order_index: azkarCategoriesCache.length,
+      }).select().single();
+      if (catErr || !newCat) continue;
+      catRow = newCat;
+      azkarCategoriesCache.push(catRow);
+    }
+    const existingTexts = new Set(azkarItemsCache.filter((i) => i.category_id === catRow.id).map((i) => i.arabic_text));
+    const newItems = cat.items.filter((it) => !existingTexts.has(it.arabic_text));
+    if (!newItems.length) continue;
+    const baseIndex = azkarItemsCache.filter((i) => i.category_id === catRow.id).length;
+    const rows = newItems.map((it, ii) => ({
+      institution_id: currentInstitution.id,
+      category_id: catRow.id,
+      arabic_text: it.arabic_text,
+      translit: it.translit,
+      meaning: it.meaning,
+      target_count: it.target_count,
+      order_index: baseIndex + ii,
+    }));
+    const { data: inserted } = await sb.from('azkar_items').insert(rows).select();
+    if (inserted) azkarItemsCache.push(...inserted);
+  }
+  toast(t('toast_created'));
+  renderAzkarAdmin();
+}
+
+function openNotificationModal() {
+  const stageOptions = stagesCache.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  const groupOptions = groupsCache.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  openModal(`
+    <h3 data-i18n="send_notification_heading">ناردنی ئاگادارکردنەوە</h3>
+    <form id="notifForm">
+      <div class="field"><label data-i18n="field_syllabus_title">ناونیشان</label><input type="text" name="title" required></div>
+      <div class="field"><label data-i18n="field_notif_body">ناوەڕۆک</label><textarea name="body" rows="3" required></textarea></div>
+      <div class="field">
+        <label data-i18n="field_target">ئامانج</label>
+        <select name="target" id="notifTargetSelect">
+          <option value="all" data-i18n="target_all">هەمووان</option>
+          <option value="teachers" data-i18n="target_teachers">تەنها مامۆستایان</option>
+          <option value="students" data-i18n="target_students">تەنها قوتابیان</option>
+          <option value="parents" data-i18n="target_parents">تەنها دایک و باوکان</option>
+          <option value="stage" data-i18n="target_stage">قۆناغێکی دیاریکراو</option>
+          <option value="group" data-i18n="target_group">گروپێکی دیاریکراو</option>
+        </select>
+      </div>
+      <div class="field" id="notifStageField" style="display:none">
+        <label data-i18n="field_stage">قۆناغ</label>
+        <select name="target_stage_id">${stageOptions}</select>
+      </div>
+      <div class="field" id="notifGroupField" style="display:none">
+        <label data-i18n="field_group">گروپ</label>
+        <select name="target_group_id">${groupOptions}</select>
+      </div>
+      <button type="submit" class="btn-primary" data-i18n="btn_save">پاشەکەوتکردن</button>
+    </form>
+  `);
+  document.getElementById('notifTargetSelect').addEventListener('change', (e) => {
+    document.getElementById('notifStageField').style.display = e.target.value === 'stage' ? 'block' : 'none';
+    document.getElementById('notifGroupField').style.display = e.target.value === 'group' ? 'block' : 'none';
+  });
+  document.getElementById('notifForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const { error } = await sb.from('notifications').insert({
+      institution_id: currentInstitution.id,
+      sender_profile_id: currentProfile.id,
+      title: fd.get('title'),
+      body: fd.get('body'),
+      target: fd.get('target'),
+      target_stage_id: fd.get('target') === 'stage' ? fd.get('target_stage_id') : null,
+      target_group_id: fd.get('target') === 'group' ? fd.get('target_group_id') : null,
+    });
+    if (error) { toast(t('toast_error'), 'error'); return; }
+    closeModal();
+    toast(t('toast_created'));
+    renderNotificationsAdmin();
+  });
+}
+
+// ---------- Settings ----------
+function fillSettings() {
+  document.getElementById('settingsName').value = currentInstitution.name || '';
+  document.getElementById('settingsLocation').value = currentInstitution.location || '';
+  document.getElementById('settingsPhone').value = currentInstitution.phone || '';
+  document.getElementById('settingsEmail').value = currentInstitution.email || '';
+  document.getElementById('settingsPrimary').value = currentInstitution.primary_color || '#1F4B43';
+  document.getElementById('settingsSecondary').value = currentInstitution.secondary_color || '#B08D3E';
+  if (currentInstitution.logo_url) {
+    const img = document.getElementById('settingsLogoPreview');
+    img.src = currentInstitution.logo_url;
+    img.style.display = 'block';
+  }
+  const link = `${window.location.origin}${window.location.pathname.replace('admin.html', '')}login.html?inst=${currentInstitution.slug}`;
+  document.getElementById('loginLinkChip').innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${link}</span>`;
+}
+
+async function saveSettings() {
+  const updates = {
+    name: document.getElementById('settingsName').value,
+    location: document.getElementById('settingsLocation').value,
+    phone: document.getElementById('settingsPhone').value,
+    email: document.getElementById('settingsEmail').value,
+    primary_color: document.getElementById('settingsPrimary').value,
+    secondary_color: document.getElementById('settingsSecondary').value,
+  };
+
+  const logoFile = document.getElementById('settingsLogoInput').files[0];
+  if (logoFile) {
+    const ext = logoFile.name.split('.').pop();
+    const path = `${currentInstitution.id}/logo.${ext}`;
+    const { error: upErr } = await sb.storage.from('logos').upload(path, logoFile, { upsert: true });
+    if (!upErr) {
+      const { data: pub } = sb.storage.from('logos').getPublicUrl(path);
+      updates.logo_url = pub.publicUrl;
+    }
+  }
+
+  const { error } = await sb.from('institutions').update(updates).eq('id', currentInstitution.id);
+  if (error) { toast(t('toast_error'), 'error'); return; }
+  Object.assign(currentInstitution, updates);
+  renderBrand();
+  toast(t('saved_msg'));
+}
+
+function copyLoginLink() {
+  const link = document.getElementById('loginLinkChip').textContent;
+  navigator.clipboard.writeText(link.trim()).then(() => toast(t('copied_msg')));
+}
+
+// ============================================================
+checkSession();
+</script>
+</body>
+</html>
